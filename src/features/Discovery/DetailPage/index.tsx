@@ -26,6 +26,8 @@ import {
 } from 'react-native';
 
 import type { Comment, Feed } from '../types';
+import ReportModal from './ReportModal';
+import ShareModal from './ShareModal';
 
 // 颜色常量
 const COLORS = {
@@ -56,6 +58,8 @@ export default function DetailPage({ feedId: propFeedId }: DetailPageProps = {})
   const [commentText, setCommentText] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   
   // Refs
   const imageScrollRef = useRef<ScrollView>(null);
@@ -214,7 +218,7 @@ export default function DetailPage({ feedId: propFeedId }: DetailPageProps = {})
 
   // 分享
   const handleShare = () => {
-    Alert.alert('分享', '分享功能开发中...');
+    setShowShareModal(true);
   };
 
   // 关注用户
@@ -356,6 +360,16 @@ export default function DetailPage({ feedId: propFeedId }: DetailPageProps = {})
     });
   };
 
+  // 跳转到话题页
+  const handleTopicPress = (topicName: string) => {
+    console.log('[DetailPage] 🧭 导航: 动态详情 → 话题页', { topicName });
+    // 使用话题名称作为ID（实际应该使用话题ID）
+    router.push({
+      pathname: '/topic/[topicId]',
+      params: { topicId: topicName },
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -386,7 +400,10 @@ export default function DetailPage({ feedId: propFeedId }: DetailPageProps = {})
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>动态详情</Text>
-        <TouchableOpacity style={styles.moreButton}>
+        <TouchableOpacity 
+          style={styles.moreButton}
+          onPress={() => setShowShareModal(true)}
+        >
           <Text style={styles.moreButtonText}>⋯</Text>
         </TouchableOpacity>
       </View>
@@ -463,7 +480,11 @@ export default function DetailPage({ feedId: propFeedId }: DetailPageProps = {})
         {feed.topicList.length > 0 && (
           <View style={styles.topicList}>
             {feed.topicList.map((topic, index) => (
-              <TouchableOpacity key={index} style={styles.topicTag}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.topicTag}
+                onPress={() => handleTopicPress(topic.name)}
+              >
                 <Text style={styles.topicText}>#{topic.name}</Text>
               </TouchableOpacity>
             ))}
@@ -576,6 +597,24 @@ export default function DetailPage({ feedId: propFeedId }: DetailPageProps = {})
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* 分享弹窗 */}
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        feedId={feedId}
+        feedTitle={feed?.title}
+        feedContent={feed?.content}
+        onReport={() => setShowReportModal(true)}
+      />
+
+      {/* 举报弹窗 */}
+      <ReportModal
+        visible={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        feedId={feedId}
+        feedTitle={feed?.title}
+      />
     </View>
   );
 }

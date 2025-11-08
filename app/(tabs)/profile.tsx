@@ -1,18 +1,14 @@
 /**
- * ProfileScreen - 个人主页路由适配器
+ * ProfileScreen - 我的页面路由
  * 
  * Features:
- * - View own profile (no userId)
- * - View other user's profile (with userId param)
- * - Authentication-aware
+ * - 显示"我的"页面（菜单式布局）
+ * - 用户可以从这里进入"个人中心"查看详细资料
  */
 
-import MainPage from '@/src/features/Profile/MainPage';
-import { useLocalSearchParams } from 'expo-router';
+import MyPage from '@/src/features/Profile/MyPage';
 import React from 'react';
 
 export default function ProfileScreen() {
-  const { userId } = useLocalSearchParams<{ userId?: string }>();
-  
-  return <MainPage userId={userId} />;
+  return <MyPage />;
 }

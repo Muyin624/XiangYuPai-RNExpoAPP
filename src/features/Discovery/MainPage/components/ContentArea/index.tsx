@@ -24,11 +24,11 @@
 // #region 2. Imports
 import React, { useCallback } from 'react';
 import {
-  ActivityIndicator,
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Dimensions,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 // 类型
@@ -37,11 +37,11 @@ import type { ContentAreaProps } from '../../types';
 
 // 配置
 import {
-  calculateCardWidth,
-  estimateFeedHeight as calculateFeedHeight,
-  DISCOVERY_COLORS,
-  DISCOVERY_TYPOGRAPHY,
-  WATERFALL_CONFIG,
+    calculateCardWidth,
+    estimateFeedHeight as calculateFeedHeight,
+    DISCOVERY_COLORS,
+    DISCOVERY_TYPOGRAPHY,
+    WATERFALL_CONFIG,
 } from '../../config';
 
 // 组件
@@ -173,7 +173,9 @@ const useContentLogic = (props: ContentAreaProps) => {
   /**
    * 键提取
    */
-  const keyExtractor = useCallback((item: Feed) => item.id, []);
+  const keyExtractor = useCallback((item: Feed, index: number) => {
+    return item.id ? String(item.id) : `feed-${index}`;
+  }, []);
   
   /**
    * 到达底部处理
@@ -215,8 +217,11 @@ const ContentArea: React.FC<ContentAreaProps> = (props) => {
     getItemHeight,
   } = useContentLogic(props);
   
+  console.log('[ContentArea] 渲染, activeTab:', props.activeTab, 'feeds数量:', feeds.length);
+  
   return (
     <WaterfallList
+      key={props.activeTab} // 强制在Tab切换时重新渲染
       data={feeds}
       renderItem={renderFeedCard}
       keyExtractor={keyExtractor}

@@ -54,9 +54,6 @@ const COLORS = {
 
 const SIZES = {
   HEIGHT: 48,
-  TAB_WIDTH: SCREEN_WIDTH / 3 - 40,
-  INDICATOR_HEIGHT: 3,
-  INDICATOR_WIDTH: 24,
   SEARCH_SIZE: 44,
   BORDER_WIDTH: 0.5,
 } as const;
@@ -71,13 +68,7 @@ const TYPOGRAPHY = {
 // #endregion
 
 // #region 5. Utils & Helpers
-/**
- * 计算指示器位置
- */
-const calculateIndicatorPosition = (activeTab: TabType): number => {
-  const tabIndex = TABS.findIndex(tab => tab.key === activeTab);
-  return (SCREEN_WIDTH / 3) * tabIndex + (SCREEN_WIDTH / 3 - SIZES.INDICATOR_WIDTH) / 2;
-};
+// (无需辅助函数)
 // #endregion
 
 // #region 6. State Management
@@ -95,8 +86,12 @@ const useNavigationLogic = (props: NavigationAreaProps) => {
    * Tab点击处理
    */
   const handleTabPress = useCallback((tab: TabType) => {
+    console.log('[NavigationArea] Tab点击:', tab, '当前Tab:', activeTab);
     if (tab !== activeTab) {
+      console.log('[NavigationArea] 切换Tab到:', tab);
       onTabChange(tab);
+    } else {
+      console.log('[NavigationArea] 已经是当前Tab，不切换');
     }
   }, [activeTab, onTabChange]);
   
@@ -126,8 +121,6 @@ const NavigationArea: React.FC<NavigationAreaProps> = (props) => {
     handleSearchButtonPress,
   } = useNavigationLogic(props);
   
-  const indicatorLeft = calculateIndicatorPosition(activeTab);
-  
   return (
     <View style={[styles.container, props.style]}>
       <View style={styles.content}>
@@ -155,24 +148,14 @@ const NavigationArea: React.FC<NavigationAreaProps> = (props) => {
           })}
         </View>
         
-        {/* 搜索按钮 */}
+        {/* 相机按钮 */}
         <TouchableOpacity
           style={styles.searchButton}
           onPress={handleSearchButtonPress}
           activeOpacity={0.7}
         >
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={styles.searchIcon}>📷</Text>
         </TouchableOpacity>
-      </View>
-      
-      {/* Tab指示器 */}
-      <View style={styles.indicatorContainer}>
-        <View
-          style={[
-            styles.indicator,
-            { left: indicatorLeft },
-          ]}
-        />
       </View>
       
       {/* 底部边框 */}
@@ -220,18 +203,6 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     fontSize: 20,
-  },
-  indicatorContainer: {
-    height: SIZES.INDICATOR_HEIGHT,
-    position: 'relative',
-  },
-  indicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: SIZES.INDICATOR_WIDTH,
-    height: SIZES.INDICATOR_HEIGHT,
-    backgroundColor: COLORS.INDICATOR,
-    borderRadius: SIZES.INDICATOR_HEIGHT / 2,
   },
   border: {
     height: SIZES.BORDER_WIDTH,

@@ -98,12 +98,18 @@ const useMainPageLogic = () => {
     state.deleteConversation(conversationId);
   }, [state]);
 
+  // 清空所有对话
+  const handleClearAll = useCallback(() => {
+    state.clearAllConversations();
+  }, [state]);
+
   return {
     state,
     handleRefresh,
     handleCategoryPress,
     handleConversationPress,
     handleConversationDelete,
+    handleClearAll,
   };
 };
 // #endregion
@@ -138,7 +144,9 @@ const MainPage: React.FC<MainPageProps> = ({ style }) => {
   return (
     <View style={[styles.container, style]}>
       {/* 导航栏始终显示 */}
-      <NavigationArea />
+      <NavigationArea 
+        onClearPress={isAuthenticated ? logic.handleClearAll : undefined}
+      />
       
       <ScrollView
         style={styles.scrollView}

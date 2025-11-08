@@ -12,7 +12,16 @@
 
 import { apiClient } from './client';
 import { buildQueryParams } from './config';
+import {
+    getMockHotContents,
+    getMockLocalContents,
+    getMockRecommendedContents,
+    simulateDelay
+} from './discoveryMockData';
 import type { ContentDetailVO, ContentListVO } from './types/content';
+
+// 开关：是否使用虚拟数据
+const USE_MOCK_DATA = true;
 
 // ==================== 类型定义 ====================
 
@@ -94,6 +103,14 @@ export class DiscoveryAPI {
    */
   async getHotContents(params: GetContentsParams = {}): Promise<ContentListVO[]> {
     const { type, limit = 20 } = params;
+    
+    // 使用虚拟数据
+    if (USE_MOCK_DATA) {
+      console.log('📱 [DiscoveryAPI] 使用虚拟数据 - 热门内容');
+      await simulateDelay(300);
+      return getMockHotContents(limit);
+    }
+    
     const queryParams = buildQueryParams({ type, limit });
     const url = `/xypai-content/api/v1/discovery/hot${queryParams ? `?${queryParams}` : ''}`;
     
@@ -144,6 +161,14 @@ export class DiscoveryAPI {
    */
   async getRecommendedContents(params: GetContentsParams = {}): Promise<ContentListVO[]> {
     const { type, limit = 20 } = params;
+    
+    // 使用虚拟数据
+    if (USE_MOCK_DATA) {
+      console.log('📱 [DiscoveryAPI] 使用虚拟数据 - 推荐内容');
+      await simulateDelay(300);
+      return getMockRecommendedContents(limit);
+    }
+    
     try {
       const queryParams = buildQueryParams({ type, limit });
       const url = `/xypai-content/api/v1/discovery/recommended${queryParams ? `?${queryParams}` : ''}`;
@@ -171,6 +196,14 @@ export class DiscoveryAPI {
    */
   async getLocalContents(params: GetContentsParams = {}): Promise<ContentListVO[]> {
     const { city, type, limit = 20 } = params;
+    
+    // 使用虚拟数据
+    if (USE_MOCK_DATA) {
+      console.log('📱 [DiscoveryAPI] 使用虚拟数据 - 同城内容');
+      await simulateDelay(300);
+      return getMockLocalContents(limit);
+    }
+    
     try {
       const queryParams = buildQueryParams({ city, type, limit });
       const url = `/xypai-content/api/v1/discovery/local${queryParams ? `?${queryParams}` : ''}`;

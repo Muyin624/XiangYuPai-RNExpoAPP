@@ -16,7 +16,11 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function SkillDetailScreen() {
-  const { skillId, userId } = useLocalSearchParams<{ skillId: string; userId?: string }>();
+  const { skillId, userId, isMyProduct } = useLocalSearchParams<{ 
+    skillId: string; 
+    userId?: string;
+    isMyProduct?: string;
+  }>();
   
   // Validate skillId
   if (!skillId) {
@@ -34,7 +38,11 @@ export default function SkillDetailScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ErrorBoundary>
-        <SkillDetailPage skillId={skillId} userId={userId || ''} />
+        <SkillDetailPage 
+          skillId={skillId} 
+          userId={userId || ''} 
+          isMyProduct={isMyProduct === 'true'}
+        />
       </ErrorBoundary>
     </>
   );

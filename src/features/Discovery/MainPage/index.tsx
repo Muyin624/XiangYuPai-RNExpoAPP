@@ -25,9 +25,9 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
-  SafeAreaView,
-  StatusBar,
-  StyleSheet
+    SafeAreaView,
+    StatusBar,
+    StyleSheet
 } from 'react-native';
 
 // 类型和常量
@@ -211,11 +211,14 @@ const useMainPageState = (props: MainPageProps) => {
   }, [activeTab, feedData.hasMore]);
   
   // 初始化Tab（如果props指定了初始Tab）
+  // 注意：只在组件挂载时执行一次，不要在activeTab变化时重复执行
   useEffect(() => {
     if (props.initialTab && props.initialTab !== activeTab) {
+      console.log('[MainPage] 初始化Tab:', props.initialTab);
       setActiveTab(props.initialTab);
     }
-  }, [props.initialTab, activeTab, setActiveTab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.initialTab]); // 只依赖initialTab，不依赖activeTab
   
   return {
     // 状态
@@ -264,10 +267,14 @@ const useMainPageLogic = (props: MainPageProps) => {
    * 初始化页面数据
    */
   useEffect(() => {
+    console.log('[MainPage] useEffect触发 - activeTab:', activeTab, 'currentFeeds数量:', currentFeeds.length);
     const initializeData = async () => {
       // 如果当前Tab还没有数据，则加载
       if (currentFeeds.length === 0) {
+        console.log('[MainPage] 当前Tab无数据，开始加载:', activeTab);
         await loadFeedList(activeTab, false);
+      } else {
+        console.log('[MainPage] 当前Tab已有数据，跳过加载');
       }
     };
     
@@ -278,8 +285,13 @@ const useMainPageLogic = (props: MainPageProps) => {
    * 切换Tab
    */
   const handleTabChange = useCallback((tab: TabType) => {
-    if (tab === activeTab) return;
+    console.log('[MainPage] handleTabChange 被调用:', tab, '当前Tab:', activeTab);
+    if (tab === activeTab) {
+      console.log('[MainPage] Tab相同，不切换');
+      return;
+    }
     
+    console.log('[MainPage] 调用 setActiveTab:', tab);
     setActiveTab(tab);
   }, [activeTab, setActiveTab]);
   
@@ -298,12 +310,11 @@ const useMainPageLogic = (props: MainPageProps) => {
   }, [activeTab, loadMoreFeeds]);
   
   /**
-   * 搜索按钮点击
+   * 相机按钮点击 - 进入发布页
    */
   const handleSearchPress = useCallback(() => {
-    // TODO: 创建搜索页面路由后启用
-    console.log('搜索功能');
-    // router.push(ROUTES.DISCOVERY.MAIN + '/search');
+    console.log('进入发布页');
+    router.push('/publish' as any);
   }, [router]);
   
   /**

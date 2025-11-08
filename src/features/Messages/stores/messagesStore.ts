@@ -128,14 +128,9 @@ export const useMessagesStore = create<MessagesState>()(
        */
       loadCategoryUnreadCounts: async () => {
         try {
-          // TODO: 调用实际API获取各分类未读数
-          // 暂时使用模拟数据
-          const categoryUnreadCounts = {
-            likes: 0,
-            comments: 0,
-            followers: 0,
-            notifications: 0,
-          };
+          // 使用虚拟数据计算各分类未读数
+          const { getMockCategoryUnreadCounts } = await import('../api/mockData');
+          const categoryUnreadCounts = getMockCategoryUnreadCounts();
           
           set({ categoryUnreadCounts });
         } catch (error) {
@@ -163,6 +158,16 @@ export const useMessagesStore = create<MessagesState>()(
           console.error('[messagesStore] refreshConversations error:', error);
           // 刷新失败不显示错误，静默失败
         }
+      },
+
+      /**
+       * 清空所有对话
+       */
+      clearAllConversations: () => {
+        set({
+          conversations: [],
+          unreadCount: 0,
+        });
       },
       }),
       {

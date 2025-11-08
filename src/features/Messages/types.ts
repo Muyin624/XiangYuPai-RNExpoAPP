@@ -52,6 +52,8 @@ export interface Notification {
   content: string;
   timestamp: number;
   isRead: boolean;
+  isFollowing?: boolean; // 是否已回关（仅用于follow类型）
+  isMutualFollow?: boolean; // 是否互相关注（仅用于follow类型）
   relatedContent?: {
     type: 'post' | 'comment';
     preview?: string;
@@ -224,6 +226,7 @@ export interface MessagesState {
   markAsRead: (conversationId: string) => void;
   deleteConversation: (conversationId: string) => void;
   refreshConversations: () => Promise<void>;
+  clearAllConversations: () => void;
 }
 
 /**

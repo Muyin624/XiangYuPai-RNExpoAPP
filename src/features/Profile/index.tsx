@@ -93,6 +93,8 @@ export { default as DynamicPage } from './DynamicPage';
 export { default as FollowListPage } from './FollowListPage';
 export { default as LikesPage } from './LikesPage';
 export { default as MainPage } from './MainPage';
+export { default as MyPage } from './MyPage';
+export { default as PersonalCenterPage } from './PersonalCenterPage';
 export { default as PostDetailPage } from './PostDetailPage';
 export { default as ProfileEditPage } from './ProfileEditPage';
 export { default as SkillsEditPage } from './ProfileEditPage/SkillsEditPage';

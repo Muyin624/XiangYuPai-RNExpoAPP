@@ -7,6 +7,13 @@
 import { api } from '@/services/api/client';
 import { API_ENDPOINTS, PAGINATION_CONFIG } from '../constants';
 import type { ApiResponse, MessagesResponse } from '../types';
+import {
+    getMockMessagesResponse,
+    simulateDelay,
+} from './mockData';
+
+// 开关：是否使用虚拟数据
+const USE_MOCK_DATA = true;
 
 /**
  * 聊天模块API接口
@@ -20,6 +27,12 @@ export const chatApi = {
     page: number = PAGINATION_CONFIG.INITIAL_PAGE
   ): Promise<MessagesResponse> => {
     try {
+      // 使用虚拟数据
+      if (USE_MOCK_DATA) {
+        await simulateDelay(300);
+        return getMockMessagesResponse(chatId);
+      }
+
       const response = await api.get<MessagesResponse>(
         API_ENDPOINTS.MESSAGES(chatId),
         {
@@ -44,6 +57,12 @@ export const chatApi = {
     content: string
   ): Promise<ApiResponse> => {
     try {
+      // 使用虚拟数据
+      if (USE_MOCK_DATA) {
+        await simulateDelay(500);
+        return { success: true, message: '发送成功' };
+      }
+
       const response = await api.post<ApiResponse>(
         API_ENDPOINTS.SEND_MESSAGE(chatId),
         { content }
@@ -63,6 +82,12 @@ export const chatApi = {
     messageIds: string[]
   ): Promise<ApiResponse> => {
     try {
+      // 使用虚拟数据
+      if (USE_MOCK_DATA) {
+        await simulateDelay(200);
+        return { success: true, message: '标记成功' };
+      }
+
       const response = await api.patch<ApiResponse>(
         API_ENDPOINTS.MARK_MESSAGES_READ(chatId),
         { messageIds }

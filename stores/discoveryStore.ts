@@ -129,9 +129,13 @@ export const useDiscoveryStore = create<DiscoveryStore>((set, get) => ({
   
   // === Tab切换 ===
   setActiveTab: (tab: TabType) => {
-    set((state) => ({
-      ui: { ...state.ui, activeTab: tab },
-    }));
+    console.log('[DiscoveryStore] setActiveTab 被调用:', tab);
+    set((state) => {
+      console.log('[DiscoveryStore] 当前activeTab:', state.ui.activeTab, '-> 新activeTab:', tab);
+      return {
+        ui: { ...state.ui, activeTab: tab },
+      };
+    });
   },
   
   // === 加载动态流 ===

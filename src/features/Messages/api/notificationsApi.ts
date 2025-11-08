@@ -7,11 +7,18 @@
 import { api } from '@/services/api/client';
 import { API_ENDPOINTS } from '../constants';
 import type { ApiResponse, NotificationsResponse } from '../types';
+import {
+    getMockNotificationsResponse,
+    simulateDelay,
+} from './mockData';
 
 /**
  * 通知类型
  */
 type NotificationType = 'like' | 'comment' | 'follow' | 'system';
+
+// 开关：是否使用虚拟数据
+const USE_MOCK_DATA = true;
 
 /**
  * 通知模块API接口
@@ -24,6 +31,12 @@ export const notificationsApi = {
     type: NotificationType
   ): Promise<NotificationsResponse> => {
     try {
+      // 使用虚拟数据
+      if (USE_MOCK_DATA) {
+        await simulateDelay(300);
+        return getMockNotificationsResponse(type);
+      }
+
       const response = await api.get<NotificationsResponse>(
         API_ENDPOINTS.NOTIFICATIONS(type)
       );
@@ -39,6 +52,12 @@ export const notificationsApi = {
    */
   clearNotifications: async (type: NotificationType): Promise<ApiResponse> => {
     try {
+      // 使用虚拟数据
+      if (USE_MOCK_DATA) {
+        await simulateDelay(200);
+        return { success: true, message: '清空成功' };
+      }
+
       const response = await api.delete<ApiResponse>(
         API_ENDPOINTS.CLEAR_NOTIFICATIONS(type)
       );

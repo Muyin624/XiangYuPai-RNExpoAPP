@@ -30,6 +30,7 @@ import {
 interface SkillDetailPageProps {
   skillId: string;
   userId: string;
+  isMyProduct?: boolean;  // 是否是我的产品
 }
 
 interface Review {
@@ -74,7 +75,7 @@ const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
 /**
  * 技能详情页主组件
  */
-const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId, userId }) => {
+const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId, userId, isMyProduct = false }) => {
   const router = useRouter();
 
   // 模拟数据
@@ -128,6 +129,12 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId, userId }) =>
     console.log('下单');
     // 跳转到订单页面
     router.push(`/order/create?skillId=${skillId}&userId=${userId}` as any);
+  };
+
+  // 处理管理（编辑）
+  const handleManage = () => {
+    console.log('管理发布', { skillId });
+    router.push(`/profile/manage-post?postId=${skillId}` as any);
   };
 
   return (
@@ -217,15 +224,33 @@ const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId, userId }) =>
 
       {/* 底部按钮 */}
       <View style={styles.bottomButtons}>
-        <TouchableOpacity style={styles.messageButton} onPress={handleMessage}>
-          <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.messageButtonText}>私信</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
-          <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.orderButtonText}>下单</Text>
-        </TouchableOpacity>
+        {isMyProduct ? (
+          // 我的产品：显示编辑和删除按钮
+          <>
+            <TouchableOpacity style={styles.editButton} onPress={handleManage}>
+              <Ionicons name="create-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.editButtonText}>编辑</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.manageButton} onPress={handleManage}>
+              <Ionicons name="settings-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.manageButtonText}>管理</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          // 他人产品：显示私信和下单按钮
+          <>
+            <TouchableOpacity style={styles.messageButton} onPress={handleMessage}>
+              <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.messageButtonText}>私信</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
+              <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.orderButtonText}>下单</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -491,6 +516,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#D946EF',
   },
   orderButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  // 编辑按钮（我的产品）
+  editButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#10B981',
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  // 管理按钮（我的产品）
+  manageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#8B5CF6',
+  },
+  manageButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',

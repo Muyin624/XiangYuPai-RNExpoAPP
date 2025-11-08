@@ -12,6 +12,15 @@ import React from 'react';
 export default function ProfileLayout() {
   return (
     <Stack>
+      {/* 个人中心 - 当前用户详情页 */}
+      <Stack.Screen 
+        name="user-profile" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
       {/* 用户主页详情 - 查看他人资料 */}
       <Stack.Screen 
         name="[userId]" 
@@ -78,6 +87,24 @@ export default function ProfileLayout() {
       {/* 粉丝列表 */}
       <Stack.Screen 
         name="followers" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 我的发布 */}
+      <Stack.Screen 
+        name="my-posts" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 管理发布/接单页面 */}
+      <Stack.Screen 
+        name="manage-post" 
         options={{ 
           headerShown: false,
           animation: 'slide_from_right',
