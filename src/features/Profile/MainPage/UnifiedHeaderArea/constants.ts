@@ -8,9 +8,9 @@ import { Dimensions } from 'react-native';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // #region Layout Constants
-export const BACKGROUND_HEIGHT = 500; // 背景图片高度
-export const CARD_ELEVATION_OFFSET = -80; // 卡片上浮偏移量（负值表示向上）
-export const CARD_BORDER_RADIUS = 16; // 卡片圆角
+export const BACKGROUND_HEIGHT = 240; // 背景图片高度（更紧凑的设计）
+export const CARD_ELEVATION_OFFSET = -40; // 卡片上浮偏移量（负值表示向上）
+export const CARD_BORDER_RADIUS = 20; // 卡片圆角（更圆润）
 export const CARD_HORIZONTAL_MARGIN = 16; // 卡片左右边距
 // #endregion
 

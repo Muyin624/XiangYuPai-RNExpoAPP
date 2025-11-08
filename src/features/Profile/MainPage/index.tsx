@@ -25,12 +25,12 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    View
 } from 'react-native';
 
 // Store
@@ -46,7 +46,6 @@ import type { MainPageProps } from './types';
 import ProfileSkeleton from './ProfileSkeleton';
 import TabContentArea from './TabContentArea';
 import TabNavigationArea from './TabNavigationArea';
-import UnauthenticatedArea from './UnauthenticatedArea';
 import UnifiedHeaderArea from './UnifiedHeaderArea';
 // #endregion
 
@@ -94,10 +93,10 @@ const useMainPageState = (props: MainPageProps) => {
     }
   }, [props.initialTab, activeTab, setActiveTab]);
   
-  // 🆕 加载用户资料 - 只在已登录时加载
+  // 🆕 加载用户资料 - 使用假数据，不需要登录也能显示
   useEffect(() => {
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📱 MainPage - 用户资料加载检查');
+    console.log('📱 MainPage - 用户资料加载检查（假数据模式）');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('   是否已初始化:', isInitialized);
     console.log('   是否已登录:', isAuthenticated);
@@ -105,21 +104,36 @@ const useMainPageState = (props: MainPageProps) => {
     console.log('   是否本人主页:', isOwnProfile);
     console.log('   当前用户信息:', currentProfile ? `已加载 (${currentProfile.nickname})` : '未加载');
     
-    // 🎯 只有在已登录时才加载用户资料
-    if (isInitialized && isAuthenticated) {
-      console.log('   ✅ 已登录，准备加载用户资料');
+    // 🎯 使用假数据模式：无论是否登录都加载资料
+    if (isInitialized) {
+      if (isAuthenticated) {
+        console.log('   ✅ 已登录，加载用户资料（假数据）');
+      } else {
+        console.log('   ℹ️  未登录，仍然加载资料（假数据模式）');
+      }
       console.log('   📊 调用 loadUserProfile:', props.userId || '(当前用户)');
       
       // 🔥 强制加载，即使已有数据
       console.log('   🚀 [DEBUG] 开始执行 loadUserProfile...');
       loadUserProfile(props.userId);
       console.log('   🚀 [DEBUG] loadUserProfile 调用完成（异步）');
-    } else if (isInitialized && !isAuthenticated) {
-      console.log('   ⚠️ 未登录，跳过加载资料');
     }
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-  }, [props.userId, isInitialized, isAuthenticated]);
-  // ⚠️ 移除 loadUserProfile 依赖，避免无限循环
+  }, [props.userId, isInitialized]);
+  // ⚠️ 移除 loadUserProfile 和 isAuthenticated 依赖，避免无限循环
+  
+  // 🆕 自动加载初始Tab的数据（动态Tab）
+  const loadPosts = useProfileStore((state) => state.loadPosts);
+  const posts = useProfileStore((state) => state.posts);
+  
+  useEffect(() => {
+    // 页面加载时，如果当前是动态Tab且没有数据，自动加载
+    if (activeTab === 'dynamic' && posts.dynamic.length === 0 && isInitialized) {
+      console.log('📋 初始加载动态Tab数据...');
+      loadPosts('dynamic', 1);
+    }
+  }, [isInitialized]);
+  // 只在初始化时执行一次
   
   return {
     activeTab,
@@ -146,12 +160,27 @@ const useMainPageLogic = (props: MainPageProps) => {
   const router = useRouter();
   const state = useMainPageState(props);
   
+  // 从Store获取动态数据和actions
+  const posts = useProfileStore((state) => state.posts);
+  const loadPosts = useProfileStore((state) => state.loadPosts);
+  const loadMorePosts = useProfileStore((state) => state.loadMorePosts);
+  
   /**
-   * Tab切换
+   * Tab切换 - 自动加载对应Tab的数据
    */
   const handleTabChange = useCallback((tab: TabType) => {
+    console.log('🔄 切换Tab:', tab);
     state.setActiveTab(tab);
-  }, [state]);
+    
+    // 如果是动态/收藏/点赞Tab，且还没有数据，自动加载
+    if (tab !== 'profile') {
+      const tabKey = tab as 'dynamic' | 'collection' | 'likes';
+      if (posts[tabKey].length === 0) {
+        console.log(`📋 ${tab}Tab暂无数据，自动加载...`);
+        loadPosts(tab, 1);
+      }
+    }
+  }, [state, posts, loadPosts]);
   
   /**
    * 返回按钮
@@ -171,13 +200,12 @@ const useMainPageLogic = (props: MainPageProps) => {
   }, []);
   
   /**
-   * 编辑按钮
+   * 编辑按钮 - 跳转到资料编辑页
    */
   const handleEditPress = useCallback(() => {
-    console.log('编辑资料');
-    // TODO: 跳转到编辑页面
-    // router.push('/profile/edit');
-  }, []);
+    console.log('🧭 导航: 个人主页 → 资料编辑页');
+    router.push('/profile/edit');
+  }, [router]);
   
   /**
    * 关注按钮
@@ -208,14 +236,12 @@ const useMainPageLogic = (props: MainPageProps) => {
    */
   const handleFollowingPress = useCallback(() => {
     console.log('🧭 导航: 查看关注列表');
-    // TODO: 跳转到关注列表页面
-    // router.push('/profile/following');
+    router.push('/profile/following');
   }, [router]);
   
   const handleFollowerPress = useCallback(() => {
     console.log('🧭 导航: 查看粉丝列表');
-    // TODO: 跳转到粉丝列表页面
-    // router.push('/profile/followers');
+    router.push('/profile/followers');
   }, [router]);
   
   const handleLikePress = useCallback(() => {
@@ -272,15 +298,15 @@ const MainPage: React.FC<MainPageProps> = (props) => {
     );
   }
   
-  // 🎯 未登录状态 - 显示友好的未登录UI
-  if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <UnauthenticatedArea />
-      </SafeAreaView>
-    );
-  }
+  // 🎯 【假数据模式】注释掉未登录拦截，允许显示假数据
+  // if (!isAuthenticated) {
+  //   return (
+  //     <SafeAreaView style={styles.container}>
+  //       <StatusBar barStyle="dark-content" />
+  //       <UnauthenticatedArea />
+  //     </SafeAreaView>
+  //   );
+  // }
   
   // 🎯 已登录但数据加载中 - 显示骨架屏
   if (loading || !userInfo) {
@@ -312,15 +338,21 @@ const MainPage: React.FC<MainPageProps> = (props) => {
           nickname={userInfo.nickname}
           gender={userInfo.gender === 'male' ? 1 : userInfo.gender === 'female' ? 2 : undefined}
           age={userInfo.age}
+          height={userInfo.height}
           isRealVerified={userInfo.isRealVerified}
           isGodVerified={userInfo.isGodVerified}
           isVipVerified={userInfo.isVip}
           isOnline={true} // TODO: 从后端获取在线状态
           distance={userInfo.distance}
           followerCount={userInfo.followerCount}
+          followingCount={userInfo.followingCount}
+          likeCount={userInfo.likeCount}
           isOwnProfile={isOwnProfile}
           onEditPress={handleEditPress}
           onFollowPress={handleFollowPress}
+          onFollowingPress={handleFollowingPress}
+          onFollowerPress={handleFollowerPress}
+          onLikePress={handleLikePress}
           onBack={handleBack}
         />
         

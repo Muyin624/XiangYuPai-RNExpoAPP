@@ -19,9 +19,11 @@ import {
 } from 'react-native';
 
 // Store和API
-import { profileApi } from '@/services/api/profileApi';
+// ========== 🚫 注释掉真实API导入 ==========
+// import { profileApi } from '@/services/api/profileApi';
+// import { profileDataTransform } from '../utils/dataTransform';
+// =========================================
 import { useProfileStore } from '@/stores/profileStore';
-import { profileDataTransform } from '../utils/dataTransform';
 
 import type { ProfileFields, SkillItem } from '../types';
 // #endregion
@@ -73,35 +75,38 @@ const useProfileInfoLogic = (userId: string, isOwnProfile: boolean) => {
     const loadProfileData = async () => {
       setLoading(true);
       try {
-        console.log('\n📋 ProfileInfoPage - 加载资料数据');
+        console.log('\n📋 ProfileInfoPage - 加载资料数据（使用假数据）');
         console.log('   用户ID:', userId);
         
-        // 🎯 调用真实后端API获取职业标签
-        const api = profileApi;
+        // ========== 🚫 注释掉真实API调用 ==========
+        // const api = profileApi;
+        // const occupationsData = await api.getUserOccupations(Number(userId));
+        // const skillsData = profileDataTransform.transformOccupationList(occupationsData);
+        // setSkills(skillsData);
+        // =========================================
         
-        const occupationsData = await api.getUserOccupations(Number(userId));
+        // ========== ✅ 使用假数据 ==========
+        console.log('   模拟网络延迟（500ms）');
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // 🔄 转换职业数据
-        const skillsData = profileDataTransform.transformOccupationList(occupationsData);
-        setSkills(skillsData);
+        // 直接使用假数据
+        const mockFields = generateMockProfileFields();
+        const mockSkills = generateMockSkills();
         
-        console.log('✅ 职业标签加载完成:', skillsData.length, '个');
-        
-        // 🔄 从currentProfile构建资料字段
+        // 如果有currentProfile，使用其中的部分数据
         if (currentProfile) {
-          const fields: ProfileFields = {
-            location: currentProfile.location,
-            ipLocation: currentProfile.ipLocation,
-            height: currentProfile.height,
-            userId: currentProfile.id,
-            weight: currentProfile.weight,
-            occupation: currentProfile.occupations?.[0],
-            wechat: currentProfile.wechat,
-            birthday: currentProfile.birthday,
-          };
-          setProfileFields(fields);
-          console.log('✅ 资料字段构建完成');
+          mockFields.userId = currentProfile.id;
+          mockFields.location = currentProfile.region || mockFields.location;
         }
+        
+        setProfileFields(mockFields);
+        setSkills(mockSkills);
+        
+        console.log('✅ 假数据加载完成');
+        console.log('   资料字段:', mockFields);
+        console.log('   技能数量:', mockSkills.length);
+        // =========================================
+        
       } catch (error) {
         console.error('❌ 加载资料数据失败:', error);
         // 降级使用模拟数据

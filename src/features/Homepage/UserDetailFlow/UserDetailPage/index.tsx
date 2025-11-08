@@ -89,6 +89,11 @@ const useUserDetailLogic = (userId: string, serviceType?: string) => {
     router.push({ pathname: '/messages/chat/[conversationId]' as any, params: { conversationId: userId } });
   }, [router, userId]);
   
+  const handleUnlockWeChat = useCallback(() => {
+    console.log('Unlock WeChat for user:', userId);
+    // TODO: Implement WeChat unlock logic
+  }, [userId]);
+  
   const handleBook = useCallback(() => {
     console.log('Book service:', userId, serviceType);
   }, [userId, serviceType]);
@@ -100,6 +105,7 @@ const useUserDetailLogic = (userId: string, serviceType?: string) => {
     handleBack,
     handleFollow,
     handleMessage,
+    handleUnlockWeChat,
     handleBook,
   };
 };
@@ -159,6 +165,48 @@ const UserHeaderArea: React.FC<{
 );
 
 /**
+ * 个人信息区域
+ */
+const PersonalInfoArea: React.FC<{ user: any }> = ({ user }) => (
+  <Card style={styles.infoCard}>
+    <Text style={styles.sectionTitle}>个人信息</Text>
+    
+    {/* 信息行 */}
+    <View style={styles.infoGrid}>
+      {/* 身高 */}
+      {user?.height && (
+        <View style={styles.infoRow}>
+          <Text style={styles.infoIcon}>📏</Text>
+          <Text style={styles.infoLabel}>身高</Text>
+          <Text style={styles.infoValue}>{user.height}cm</Text>
+        </View>
+      )}
+      
+      {/* 关注 */}
+      <View style={styles.infoRow}>
+        <Text style={styles.infoIcon}>👥</Text>
+        <Text style={styles.infoLabel}>关注</Text>
+        <Text style={styles.infoValue}>{user?.followingCount ?? 0}</Text>
+      </View>
+      
+      {/* 粉丝 */}
+      <View style={styles.infoRow}>
+        <Text style={styles.infoIcon}>⭐</Text>
+        <Text style={styles.infoLabel}>粉丝</Text>
+        <Text style={styles.infoValue}>{user?.followersCount ?? 0}</Text>
+      </View>
+      
+      {/* 获赞 */}
+      <View style={styles.infoRow}>
+        <Text style={styles.infoIcon}>❤️</Text>
+        <Text style={styles.infoLabel}>获赞</Text>
+        <Text style={styles.infoValue}>{user?.likesCount ?? 0}</Text>
+      </View>
+    </View>
+  </Card>
+);
+
+/**
  * 服务信息区域
  */
 const ServiceInfoArea: React.FC<{ user: any }> = ({ user }) => (
@@ -199,6 +247,7 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ userId, serviceType }) 
     handleBack,
     handleFollow,
     handleMessage,
+    handleUnlockWeChat,
     handleBook,
   } = useUserDetailLogic(userId, serviceType);
   
@@ -237,6 +286,8 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ userId, serviceType }) 
             onMessage={handleMessage}
           />
           
+          <PersonalInfoArea user={user} />
+          
           <ServiceInfoArea user={user} />
           
           {/* 预订按钮 */}
@@ -252,6 +303,27 @@ const UserDetailPage: React.FC<UserDetailPageProps> = ({ userId, serviceType }) 
             </View>
           )}
         </ScrollView>
+        
+        {/* Bottom Action Buttons (私信 & 解锁微信) */}
+        <View style={styles.bottomButtonArea}>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={handleMessage}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.messageButtonIcon}>💬</Text>
+            <Text style={styles.messageButtonText}>私信</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.unlockButton}
+            onPress={handleUnlockWeChat}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.unlockButtonIcon}>🔓</Text>
+            <Text style={styles.unlockButtonText}>解锁微信</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ErrorBoundary>
   );
@@ -378,6 +450,34 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   
+  // 个人信息网格
+  infoGrid: {
+    gap: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: COLORS.SURFACE,
+    borderRadius: 8,
+  },
+  infoIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  infoLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.TEXT,
+  },
+  infoValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.PRIMARY,
+  },
+  
   // 标签
   tagsContainer: {
     flexDirection: 'row',
@@ -433,6 +533,58 @@ const styles = StyleSheet.create({
   },
   bookButton: {
     width: '100%',
+  },
+  
+  // Bottom Action Buttons
+  bottomButtonArea: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: COLORS.BACKGROUND,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.BORDER,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  messageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#8B5CF6', // Purple color for 私信
+  },
+  messageButtonIcon: {
+    fontSize: 20,
+  },
+  messageButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  unlockButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#D946EF', // Magenta/Pink color for 解锁微信
+  },
+  unlockButtonIcon: {
+    fontSize: 20,
+  },
+  unlockButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   
   // 错误状态

@@ -30,10 +30,10 @@ export const CARD_COLORS = {
 };
 
 export const CARD_SIZES = {
-  BORDER_RADIUS: 16,
+  BORDER_RADIUS: 20,
   PADDING_HORIZONTAL: 20,
-  PADDING_VERTICAL: 16,
-  ROW_GAP: 10,
+  PADDING_VERTICAL: 18,
+  ROW_GAP: 12,
   
   // Online Dot
   ONLINE_DOT_SIZE: 8,

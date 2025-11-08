@@ -92,9 +92,9 @@ export default function RootLayout() {
           }} 
         />
         
-        {/* 用户主页路由 */}
+        {/* 用户主页路由组 */}
         <Stack.Screen 
-          name="profile/[userId]" 
+          name="profile" 
           options={{ 
             headerShown: false,
             animation: 'slide_from_right',

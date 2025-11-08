@@ -66,8 +66,8 @@ const formatCount = (count: number): string => {
 // #endregion
 
 const PostCard: React.FC<PostCardProps> = ({ post, onPress, style }) => {
-  // 计算图片宽高比
-  const imageAspectRatio = post.coverImage ? 1 : undefined;
+  // 计算图片宽高比 - 使用动态比例
+  const imageAspectRatio = post.coverImage ? 0.75 : undefined; // 3:4 比例
 
   return (
     <TouchableOpacity
@@ -77,18 +77,33 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPress, style }) => {
     >
       {/* 封面图 */}
       {post.coverImage && (
-        <Image
-          source={{ uri: post.coverImage }}
-          style={[
-            styles.coverImage,
-            imageAspectRatio && { aspectRatio: imageAspectRatio },
-          ]}
-          resizeMode="cover"
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: post.coverImage }}
+            style={[
+              styles.coverImage,
+              imageAspectRatio && { aspectRatio: imageAspectRatio },
+            ]}
+            resizeMode="cover"
+          />
+          {/* 视频标识 */}
+          {post.mediaList?.[0]?.type === 'video' && (
+            <View style={styles.videoIndicator}>
+              <Ionicons name="play-circle" size={32} color="#FFFFFF" />
+            </View>
+          )}
+        </View>
       )}
 
       {/* 内容区域 */}
       <View style={styles.content}>
+        {/* 标题 */}
+        {post.title && (
+          <Text style={styles.title} numberOfLines={2}>
+            {post.title}
+          </Text>
+        )}
+        
         {/* 文字内容（如果没有封面图） */}
         {!post.coverImage && post.content && (
           <Text style={styles.contentText} numberOfLines={4}>
@@ -96,61 +111,30 @@ const PostCard: React.FC<PostCardProps> = ({ post, onPress, style }) => {
           </Text>
         )}
 
-        {/* 用户信息 */}
-        <View style={styles.userInfo}>
-          <Image
-            source={{ uri: post.userInfo.avatar }}
-            style={styles.avatar}
-          />
-          <View style={styles.userDetails}>
+        {/* 底部信息栏 */}
+        <View style={styles.footer}>
+          {/* 用户信息 */}
+          <View style={styles.userInfo}>
+            <Image
+              source={{ uri: post.userInfo.avatar }}
+              style={styles.avatar}
+            />
             <Text style={styles.nickname} numberOfLines={1}>
               {post.userInfo.nickname}
             </Text>
-            <Text style={styles.timeAgo}>
-              {formatTimeAgo(post.createdAt)}
-            </Text>
           </View>
-        </View>
 
-        {/* 统计信息 */}
-        <View style={styles.stats}>
-          {/* 点赞 */}
-          <View style={styles.statItem}>
+          {/* 点赞数 */}
+          <View style={styles.likeInfo}>
             <Ionicons
-              name={post.isLiked ? 'heart' : 'heart-outline'}
+              name={post.isLiked ? 'heart' : 'heart'}
               size={16}
-              color={post.isLiked ? '#FF4081' : '#757575'}
+              color="#FF4458"
             />
-            <Text style={[
-              styles.statText,
-              post.isLiked && styles.statTextLiked
-            ]}>
+            <Text style={styles.likeText}>
               {formatCount(post.likeCount)}
             </Text>
           </View>
-
-          {/* 评论 */}
-          <View style={styles.statItem}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={16}
-              color="#757575"
-            />
-            <Text style={styles.statText}>
-              {formatCount(post.commentCount)}
-            </Text>
-          </View>
-
-          {/* 收藏 */}
-          {post.isCollected && (
-            <View style={styles.statItem}>
-              <Ionicons
-                name="star"
-                size={16}
-                color="#FFC107"
-              />
-            </View>
-          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -164,63 +148,73 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
   },
   coverImage: {
     width: '100%',
-    minHeight: 120,
+    minHeight: 150,
+  },
+  videoIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -16 }, { translateY: -16 }],
+    opacity: 0.9,
   },
   content: {
     padding: CARD_PADDING,
+  },
+  title: {
+    fontSize: 14,
+    color: '#333333',
+    fontWeight: '500',
+    lineHeight: 20,
+    marginBottom: 8,
   },
   contentText: {
     fontSize: 14,
     color: '#333333',
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    flex: 1,
+    marginRight: 8,
   },
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
-    marginRight: 8,
-  },
-  userDetails: {
-    flex: 1,
+    marginRight: 6,
   },
   nickname: {
-    fontSize: 13,
-    color: '#333333',
-    fontWeight: '500',
-    marginBottom: 2,
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '400',
+    flex: 1,
   },
-  timeAgo: {
-    fontSize: 11,
-    color: '#999999',
-  },
-  stats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  statItem: {
+  likeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  statText: {
+  likeText: {
     fontSize: 12,
-    color: '#757575',
-  },
-  statTextLiked: {
-    color: '#FF4081',
+    color: '#666666',
+    fontWeight: '400',
   },
 });
 

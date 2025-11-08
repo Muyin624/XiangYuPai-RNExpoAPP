@@ -14,6 +14,7 @@ export interface User {
   avatar: string;
   age: number;
   gender: 'male' | 'female' | 'other';
+  height?: number; // 身高（cm）
   location: {
     city: string;
     district: string;
@@ -33,6 +34,10 @@ export interface User {
     level: string;
     price: number;
   }>;
+  // 社交统计
+  followingCount?: number; // 关注数
+  followersCount?: number; // 粉丝数
+  likesCount?: number; // 获赞数
 }
 
 // 用户列表状态类型
@@ -162,6 +167,7 @@ const generateMockUsers = (page: number, limit: number): User[] => {
       avatar: `https://example.com/avatar${(index % 10) + 1}.jpg`,
       age: 18 + (index % 15),
       gender: index % 3 === 0 ? 'female' : index % 3 === 1 ? 'male' : 'other',
+      height: 155 + (index % 30), // 身高: 155-185cm
       location: {
         city: cities[index % cities.length],
         district: `${cities[index % cities.length]}区`,
@@ -183,6 +189,10 @@ const generateMockUsers = (page: number, limit: number): User[] => {
           price: 30 + (index % 50),
         },
       ],
+      // 社交统计数据
+      followingCount: Math.floor(Math.random() * 500) + 50, // 关注数: 50-550
+      followersCount: Math.floor(Math.random() * 1000) + 100, // 粉丝数: 100-1100
+      likesCount: Math.floor(Math.random() * 5000) + 500, // 获赞数: 500-5500
     });
   }
   

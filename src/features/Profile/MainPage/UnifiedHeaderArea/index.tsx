@@ -20,12 +20,11 @@
  */
 
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import BackgroundLayer from './BackgroundLayer';
 import TopActionBar from './TopActionBar';
-import UserInfoCard from './UserInfoCard';
-import { BACKGROUND_HEIGHT, CARD_ELEVATION_OFFSET } from './constants';
+import { BACKGROUND_HEIGHT } from './constants';
 import type { UnifiedHeaderAreaProps } from './types';
 
 const UnifiedHeaderArea: React.FC<UnifiedHeaderAreaProps> = ({
@@ -36,6 +35,7 @@ const UnifiedHeaderArea: React.FC<UnifiedHeaderAreaProps> = ({
   nickname,
   gender,
   age,
+  height,
   
   // Verification Badges
   isRealVerified = false,
@@ -46,6 +46,8 @@ const UnifiedHeaderArea: React.FC<UnifiedHeaderAreaProps> = ({
   isOnline,
   distance,
   followerCount,
+  followingCount,
+  likeCount,
   
   // Follow Status
   isFollowing = false,
@@ -61,6 +63,9 @@ const UnifiedHeaderArea: React.FC<UnifiedHeaderAreaProps> = ({
   onBack,
   onEditPress,
   onFollowPress,
+  onFollowingPress,
+  onFollowerPress,
+  onLikePress,
 }) => {
   return (
     <View style={styles.container}>
@@ -77,22 +82,71 @@ const UnifiedHeaderArea: React.FC<UnifiedHeaderAreaProps> = ({
         onFollowPress={onFollowPress}
       />
 
-      {/* 用户信息卡片（浮动在底部） */}
-      <View style={styles.cardContainer}>
-        <UserInfoCard
-          nickname={nickname}
-          gender={gender}
-          age={age}
-          isRealVerified={isRealVerified}
-          isGodVerified={isGodVerified}
-          isVipVerified={isVipVerified}
-          isOnline={isOnline}
-          distance={distance}
-          followerCount={followerCount}
-          customTags={customTags}
-          isOwnProfile={isOwnProfile}
-          onEditPress={onEditPress}
-        />
+      {/* 用户信息直接在背景上（白色文字） */}
+      <View style={styles.userInfoContainer}>
+        <Text style={styles.nickname}>
+          {nickname} <Text style={styles.age}>{age}岁</Text>
+        </Text>
+        
+        {/* 状态信息行 */}
+        <View style={styles.statusRow}>
+          {/* 在线状态 */}
+          {isOnline !== undefined && (
+            <View style={styles.statusItem}>
+              <View style={[styles.onlineDot, { backgroundColor: isOnline ? '#4ADE80' : '#9CA3AF' }]} />
+              <Text style={styles.statusText}>{isOnline ? '在线' : '离线'}</Text>
+            </View>
+          )}
+          
+          {/* 身高 */}
+          {height && (
+            <View style={styles.statusItem}>
+              <Text style={styles.statusIcon}>📏</Text>
+              <Text style={styles.statusText}>{height}cm</Text>
+            </View>
+          )}
+          
+          {/* 距离 */}
+          {distance !== undefined && distance > 0 && (
+            <View style={styles.statusItem}>
+              <Text style={styles.statusIcon}>📍</Text>
+              <Text style={styles.statusText}>{distance}km</Text>
+            </View>
+          )}
+        </View>
+        
+        {/* 社交统计行 */}
+        <View style={styles.socialRow}>
+          {/* 关注 */}
+          <TouchableOpacity 
+            style={styles.socialItem}
+            onPress={onFollowingPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.socialLabel}>关注</Text>
+            <Text style={styles.socialValue}>{followingCount || 0}</Text>
+          </TouchableOpacity>
+          
+          {/* 粉丝 */}
+          <TouchableOpacity 
+            style={styles.socialItem}
+            onPress={onFollowerPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.socialLabel}>粉丝</Text>
+            <Text style={styles.socialValue}>{followerCount || 0}</Text>
+          </TouchableOpacity>
+          
+          {/* 获赞 */}
+          <TouchableOpacity 
+            style={styles.socialItem}
+            onPress={onLikePress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.socialLabel}>获赞</Text>
+            <Text style={styles.socialValue}>{likeCount || 0}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -104,11 +158,70 @@ const styles = StyleSheet.create({
     height: BACKGROUND_HEIGHT,
     position: 'relative',
   },
-  cardContainer: {
+  userInfoContainer: {
     position: 'absolute',
-    bottom: CARD_ELEVATION_OFFSET,
-    left: 0,
-    right: 0,
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  nickname: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  age: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#FFFFFF',
+  },
+  
+  // 状态信息行
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 16,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  onlineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusIcon: {
+    fontSize: 14,
+  },
+  statusText: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+  
+  // 社交统计行
+  socialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  socialItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  socialLabel: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    opacity: 0.8,
+  },
+  socialValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 

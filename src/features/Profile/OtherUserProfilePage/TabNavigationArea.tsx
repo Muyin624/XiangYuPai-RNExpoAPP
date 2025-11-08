@@ -1,9 +1,9 @@
 // #region 1. File Banner & TOC
 /**
- * TabNavigationArea - Tab标签栏
+ * TabNavigationArea - 他人信息页Tab标签栏
  * 
  * 功能：
- * - 四Tab切换（动态/收藏/点赞/资料）
+ * - 三Tab切换（动态/资料/技能）
  * - Tab指示器动画
  * - 吸顶固定效果（滚动时）
  */
@@ -18,21 +18,38 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { TABS } from '../../constants';
-import { COLORS, SIZES } from '../constants';
-import type { TabNavigationAreaProps } from '../types';
+import { COLORS } from '../MainPage/constants';
+import type { TabType } from './types';
 // #endregion
 
-// #region 3-5. Types, Constants & Utils
+// #region 3. Types
+interface TabNavigationAreaProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+  style?: any;
+}
+
+interface TabItem {
+  key: TabType;
+  label: string;
+}
+// #endregion
+
+// #region 4. Constants
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TAB_WIDTH = SCREEN_WIDTH / 4;
+const TAB_WIDTH = SCREEN_WIDTH / 3; // 三个Tab
+
+/**
+ * 他人信息页Tab配置（动态/资料/技能）
+ */
+const OTHER_USER_TABS: TabItem[] = [
+  { key: 'dynamics', label: '动态' },
+  { key: 'profile', label: '资料' },
+  { key: 'skills', label: '技能' },
+];
 // #endregion
 
-// #region 6-7. State & Logic
-// (简单组件)
-// #endregion
-
-// #region 8. UI Components & Rendering
+// #region 5. UI Components & Rendering
 const TabNavigationArea: React.FC<TabNavigationAreaProps> = ({
   activeTab,
   onTabChange,
@@ -40,7 +57,7 @@ const TabNavigationArea: React.FC<TabNavigationAreaProps> = ({
 }) => {
   return (
     <View style={[styles.container, style]}>
-      {TABS.map((tab) => {
+      {OTHER_USER_TABS.map((tab) => {
         const isActive = tab.key === activeTab;
         return (
           <TouchableOpacity
@@ -66,10 +83,10 @@ const TabNavigationArea: React.FC<TabNavigationAreaProps> = ({
 };
 // #endregion
 
-// #region 9. Exports & Styles
+// #region 6. Exports & Styles
 const styles = StyleSheet.create({
   container: {
-    height: SIZES.TAB_HEIGHT,
+    height: 48,
     flexDirection: 'row',
     backgroundColor: COLORS.WHITE,
     borderBottomWidth: 0.5,

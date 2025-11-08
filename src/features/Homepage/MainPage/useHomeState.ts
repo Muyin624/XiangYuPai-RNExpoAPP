@@ -8,7 +8,9 @@
 
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { homepageApiEnhanced } from '../../../../services/api/homepageApiEnhanced';
+// ========== 🚫 注释掉真实API导入 ==========
+// import { homepageApiEnhanced } from '../../../../services/api/homepageApiEnhanced';
+// =========================================
 // 🆕 导入认证状态
 import { useAuthStore } from '../../../features/AuthModule';
 import type { LocationInfo, UserCard } from './types';
@@ -61,47 +63,49 @@ export const useHomeState = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState<LocationInfo>({ city: '深圳' });
 
-  // 加载用户数据（集成真实API）
+  // 加载用户数据（使用假数据）
   const loadUsers = useCallback(async () => {
     const startTime = Date.now();
-    console.log('[useHomeState] 🔄 开始加载用户列表', { filter: activeFilter, region: activeRegion });
+    console.log('[useHomeState] 🔄 开始加载用户列表（使用假数据）', { filter: activeFilter, region: activeRegion });
     
     setLoading(true);
     try {
-      // 🆕 尝试调用真实API
-      try {
-        console.log('[useHomeState] 📡 调用API: getUserList');
-        
-        const response = await homepageApiEnhanced.getUserList({
-          filterTab: activeFilter as 'nearby' | 'recommend' | 'latest',
-          region: activeRegion === '全部' ? undefined : activeRegion,
-          page: 1,
-          limit: 20,
-        });
-        
-        if (response.success && response.data.users.length > 0) {
-          console.log('[useHomeState] ✅ API加载成功', {
-            count: response.data.users.length,
-            total: response.data.total,
-            hasMore: response.data.hasMore,
-            duration: Date.now() - startTime + 'ms',
-          });
-          setUsers(response.data.users);
-          return;
-        } else {
-          console.warn('[useHomeState] ⚠️ API返回空数据，使用降级方案');
-        }
-      } catch (apiError) {
-        console.warn('[useHomeState] ⚠️ API调用失败，使用降级方案', apiError);
-      }
+      // ========== 🚫 注释掉真实API调用 ==========
+      // try {
+      //   console.log('[useHomeState] 📡 调用API: getUserList');
+      //   
+      //   const response = await homepageApiEnhanced.getUserList({
+      //     filterTab: activeFilter as 'nearby' | 'recommend' | 'latest',
+      //     region: activeRegion === '全部' ? undefined : activeRegion,
+      //     page: 1,
+      //     limit: 20,
+      //   });
+      //   
+      //   if (response.success && response.data.users.length > 0) {
+      //     console.log('[useHomeState] ✅ API加载成功', {
+      //       count: response.data.users.length,
+      //       total: response.data.total,
+      //       hasMore: response.data.hasMore,
+      //       duration: Date.now() - startTime + 'ms',
+      //     });
+      //     setUsers(response.data.users);
+      //     return;
+      //   } else {
+      //     console.warn('[useHomeState] ⚠️ API返回空数据，使用降级方案');
+      //   }
+      // } catch (apiError) {
+      //   console.warn('[useHomeState] ⚠️ API调用失败，使用降级方案', apiError);
+      // }
+      // =========================================
       
-      // 🔄 降级为模拟数据
+      // ========== ✅ 使用假数据 ==========
       console.log('[useHomeState] 🔄 使用模拟数据生成用户列表');
       await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
       const regionFilter = activeRegion === '全部' ? undefined : activeRegion;
       const mockUsers = generateMockUsers(activeFilter, regionFilter);
       setUsers(mockUsers);
-      console.log('[useHomeState] ✅ 模拟数据加载完成', { count: mockUsers.length, duration: Date.now() - startTime + 'ms' });
+      console.log('[useHomeState] ✅ 模拟数据加载完成（假数据）', { count: mockUsers.length, duration: Date.now() - startTime + 'ms' });
+      // =========================================
       
     } catch (error) {
       console.error('[useHomeState] ❌ 加载用户失败', error);
@@ -111,37 +115,40 @@ export const useHomeState = () => {
     }
   }, [activeFilter, activeRegion]);
 
-  // 加载限时专享数据（集成真实API）
+  // 加载限时专享数据（使用假数据）
   const loadLimitedOffers = useCallback(async () => {
     const startTime = Date.now();
-    console.log('[useHomeState] 🔄 开始加载限时专享用户');
+    console.log('[useHomeState] 🔄 开始加载限时专享用户（使用假数据）');
     
     try {
-      // 🆕 尝试调用真实API
-      try {
-        console.log('[useHomeState] 📡 调用API: getFeaturedUsers');
-        
-        const response = await homepageApiEnhanced.getFeaturedUsers({
-          limit: 5,
-          refresh: false, // 使用缓存
-        });
-        
-        if (response.success && response.data.length > 0) {
-          console.log('[useHomeState] ✅ 精选用户API加载成功', { count: response.data.length, duration: Date.now() - startTime + 'ms' });
-          setLimitedOffers(response.data);
-          return;
-        } else {
-          console.warn('[useHomeState] ⚠️ 精选用户API返回空数据，使用降级方案');
-        }
-      } catch (apiError) {
-        console.warn('[useHomeState] ⚠️ 精选用户API失败，使用降级方案', apiError);
-      }
+      // ========== 🚫 注释掉真实API调用 ==========
+      // try {
+      //   console.log('[useHomeState] 📡 调用API: getFeaturedUsers');
+      //   
+      //   const response = await homepageApiEnhanced.getFeaturedUsers({
+      //     limit: 5,
+      //     refresh: false,
+      //   });
+      //   
+      //   if (response.success && response.data.length > 0) {
+      //     console.log('[useHomeState] ✅ 精选用户API加载成功', { count: response.data.length, duration: Date.now() - startTime + 'ms' });
+      //     setLimitedOffers(response.data);
+      //     return;
+      //   } else {
+      //     console.warn('[useHomeState] ⚠️ 精选用户API返回空数据，使用降级方案');
+      //   }
+      // } catch (apiError) {
+      //   console.warn('[useHomeState] ⚠️ 精选用户API失败，使用降级方案', apiError);
+      // }
+      // =========================================
       
-      // 🔄 降级为模拟数据
+      // ========== ✅ 使用假数据 ==========
       console.log('[useHomeState] 🔄 使用模拟数据生成精选用户');
+      await new Promise(resolve => setTimeout(resolve, 300));
       const mockOffers = generateMockUsers().slice(0, 5);
       setLimitedOffers(mockOffers);
-      console.log('[useHomeState] ✅ 模拟数据加载完成', { count: mockOffers.length, duration: Date.now() - startTime + 'ms' });
+      console.log('[useHomeState] ✅ 模拟数据加载完成（假数据）', { count: mockOffers.length, duration: Date.now() - startTime + 'ms' });
+      // =========================================
       
     } catch (error) {
       console.error('[useHomeState] ❌ 加载精选用户失败', error);

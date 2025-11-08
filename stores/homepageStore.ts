@@ -8,7 +8,9 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { homepageApiEnhanced } from '../services/api/homepageApiEnhanced';
+// ========== 🚫 注释掉真实API导入 ==========
+// import { homepageApiEnhanced } from '../services/api/homepageApiEnhanced';
+// =========================================
 import { createSafeStorage } from './storage-config';
 
 // 页面配置类型
@@ -138,71 +140,79 @@ export const useHomepageStore = create<HomepageState>()(
       (set, get) => ({
         ...initialState,
 
-        // 加载页面配置（集成真实API）
+        // 加载页面配置（使用假数据）
         loadPageConfig: async () => {
           const { setLoading, setError } = get();
           const startTime = Date.now();
           
           try {
-            console.log('[HomepageStore] 🔄 开始加载页面配置');
+            console.log('[HomepageStore] 🔄 开始加载页面配置（使用假数据）');
             setLoading('pageConfig', true);
             setError('pageConfig', null);
             
-            // 🆕 调用真实API（支持降级）
-            const response = await homepageApiEnhanced.getHomepageConfig();
+            // ========== 🚫 注释掉真实API调用 ==========
+            // const response = await homepageApiEnhanced.getHomepageConfig();
+            // 
+            // if (!response.success) {
+            //   throw new Error(response.message || '配置加载失败');
+            // }
+            // 
+            // // 转换API数据格式为Store格式
+            // const apiConfig = response.data;
+            // =========================================
             
-            if (!response.success) {
-              throw new Error(response.message || '配置加载失败');
-            }
+            // ========== ✅ 使用假数据 ==========
+            console.log('   模拟网络延迟（500ms）');
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            // 转换API数据格式为Store格式
-            const apiConfig = response.data;
+            // 生成模拟配置
             const pageConfig: PageConfig = {
               topFunction: {
-                enabled: apiConfig.topFunction.enabled,
+                enabled: true,
                 config: {
-                  showLocation: apiConfig.topFunction.showLocation,
-                  showSearch: apiConfig.topFunction.showSearch,
+                  showLocation: true,
+                  showSearch: true,
                 },
               },
               gameBanner: {
-                enabled: apiConfig.gameBanner.enabled,
+                enabled: true,
                 config: {
-                  autoPlay: apiConfig.gameBanner.autoPlay,
-                  interval: apiConfig.gameBanner.interval,
+                  autoPlay: true,
+                  interval: 3000,
                 },
               },
               serviceGrid: {
-                enabled: apiConfig.serviceGrid.enabled,
+                enabled: true,
                 config: {
-                  columns: apiConfig.serviceGrid.columns,
-                  rows: apiConfig.serviceGrid.rows,
+                  columns: 4,
+                  rows: 2,
                 },
               },
               featuredUsers: {
-                enabled: apiConfig.featuredUsers.enabled,
+                enabled: true,
                 config: {
-                  maxCount: apiConfig.featuredUsers.maxCount,
-                  refreshInterval: apiConfig.featuredUsers.refreshInterval,
+                  maxCount: 10,
+                  refreshInterval: 60000,
                 },
               },
               eventCenter: {
-                enabled: apiConfig.eventCenter.enabled,
+                enabled: true,
                 config: {
-                  showPromo: apiConfig.eventCenter.showPromo,
+                  showPromo: true,
                 },
               },
               userList: {
-                enabled: apiConfig.userList.enabled,
+                enabled: true,
                 config: {
-                  pageSize: apiConfig.userList.pageSize,
-                  infiniteScroll: apiConfig.userList.infiniteScroll,
+                  pageSize: 20,
+                  infiniteScroll: true,
                 },
               },
             };
+            // =========================================
             
             set({ pageConfig });
-            console.log('[HomepageStore] ✅ 页面配置加载成功', {
+            console.log('[HomepageStore] ✅ 页面配置加载成功（假数据）', {
               areas: Object.keys(pageConfig).length,
               duration: Date.now() - startTime + 'ms',
             });
@@ -215,41 +225,52 @@ export const useHomepageStore = create<HomepageState>()(
           }
         },
 
-        // 加载页面数据（集成真实API）
+        // 加载页面数据（使用假数据）
         loadPageData: async () => {
           const { setLoading, setError } = get();
           const startTime = Date.now();
           
           try {
-            console.log('[HomepageStore] 🔄 开始加载页面数据');
+            console.log('[HomepageStore] 🔄 开始加载页面数据（使用假数据）');
             setLoading('pageData', true);
             setError('pageData', null);
             
-            // 🆕 并行加载服务配置和横幅数据
-            const [servicesRes, bannerRes] = await Promise.allSettled([
-              homepageApiEnhanced.getServiceItems(),
-              homepageApiEnhanced.getBannerData(),
-            ]);
+            // ========== 🚫 注释掉真实API调用 ==========
+            // const [servicesRes, bannerRes] = await Promise.allSettled([
+            //   homepageApiEnhanced.getServiceItems(),
+            //   homepageApiEnhanced.getBannerData(),
+            // ]);
+            // =========================================
+            
+            // ========== ✅ 使用假数据 ==========
+            console.log('   模拟网络延迟（800ms）');
+            await new Promise(resolve => setTimeout(resolve, 800));
             
             // 构建页面数据
             const pageData: PageData = {
               featuredUsers: [], // 精选用户单独加载
-              serviceItems: servicesRes.status === 'fulfilled' && servicesRes.value.success
-                ? servicesRes.value.data
-                : [],
-              bannerData: bannerRes.status === 'fulfilled' && bannerRes.value.success
-                ? bannerRes.value.data[0]
-                : {
-                    id: '1',
-                    image: '',
-                    title: '游戏推广',
-                    subtitle: '精彩内容',
-                    gameId: 'default',
-                  },
+              serviceItems: [
+                { id: '1', name: '陪玩', icon: 'game-controller', type: 'gaming', enabled: true },
+                { id: '2', name: '模特', icon: 'camera', type: 'modeling', enabled: true },
+                { id: '3', name: '聊天', icon: 'chatbubbles', type: 'chat', enabled: true },
+                { id: '4', name: '约拍', icon: 'camera-outline', type: 'photoshoot', enabled: true },
+                { id: '5', name: '组局', icon: 'people', type: 'party', enabled: true },
+                { id: '6', name: '探店', icon: 'restaurant', type: 'explore', enabled: true },
+                { id: '7', name: '活动', icon: 'calendar', type: 'event', enabled: true },
+                { id: '8', name: '更多', icon: 'ellipsis-horizontal', type: 'more', enabled: true },
+              ],
+              bannerData: {
+                id: 'mock_banner_1',
+                image: 'https://picsum.photos/800/300',
+                title: '精彩游戏陪玩',
+                subtitle: '专业陪玩，快乐相伴',
+                gameId: 'game_001',
+              },
             };
+            // =========================================
             
             set({ pageData });
-            console.log('[HomepageStore] ✅ 页面数据加载成功', {
+            console.log('[HomepageStore] ✅ 页面数据加载成功（假数据）', {
               services: pageData.serviceItems.length,
               banner: pageData.bannerData.id,
               duration: Date.now() - startTime + 'ms',
@@ -263,35 +284,50 @@ export const useHomepageStore = create<HomepageState>()(
           }
         },
 
-        // 加载精选用户（集成真实API）
+        // 加载精选用户（使用假数据）
         loadFeaturedUsers: async () => {
           const { setLoading, setError } = get();
           const startTime = Date.now();
           
           try {
-            console.log('[HomepageStore] 🔄 开始加载精选用户');
+            console.log('[HomepageStore] 🔄 开始加载精选用户（使用假数据）');
             setLoading('featuredUsers', true);
             setError('featuredUsers', null);
             
-            // 🆕 调用真实API
-            const response = await homepageApiEnhanced.getFeaturedUsers({
-              limit: 10,
-              refresh: false, // 使用缓存
-            });
+            // ========== 🚫 注释掉真实API调用 ==========
+            // const response = await homepageApiEnhanced.getFeaturedUsers({
+            //   limit: 10,
+            //   refresh: false,
+            // });
+            // 
+            // if (!response.success) {
+            //   throw new Error(response.message || '精选用户加载失败');
+            // }
+            // 
+            // const featuredUsers = response.data.map(user => ({
+            //   id: user.id,
+            //   name: user.username,
+            //   avatar: user.avatar,
+            //   tags: user.services || [],
+            //   price: user.price ? parseFloat(user.price.replace(/[^\d.]/g, '')) : 0,
+            //   rating: user.rating || 0,
+            // }));
+            // =========================================
             
-            if (!response.success) {
-              throw new Error(response.message || '精选用户加载失败');
-            }
+            // ========== ✅ 使用假数据 ==========
+            console.log('   模拟网络延迟（600ms）');
+            await new Promise(resolve => setTimeout(resolve, 600));
             
-            // 转换为PageData格式
-            const featuredUsers = response.data.map(user => ({
-              id: user.id,
-              name: user.username,
-              avatar: user.avatar,
-              tags: user.services || [],
-              price: user.price ? parseFloat(user.price.replace(/[^\d.]/g, '')) : 0,
-              rating: user.rating || 0,
+            // 生成模拟精选用户
+            const featuredUsers = Array.from({ length: 10 }, (_, i) => ({
+              id: `featured_user_${i + 1}`,
+              name: `精选用户${i + 1}`,
+              avatar: `https://picsum.photos/100/100?random=${i + 100}`,
+              tags: i % 3 === 0 ? ['陪玩', '模特'] : i % 3 === 1 ? ['聊天'] : ['约拍', '探店'],
+              price: 80 + i * 20,
+              rating: 4.5 + Math.random() * 0.5,
             }));
+            // =========================================
             
             set(state => ({
               pageData: state.pageData ? {
@@ -300,7 +336,7 @@ export const useHomepageStore = create<HomepageState>()(
               } : null,
             }));
             
-            console.log('[HomepageStore] ✅ 精选用户加载成功', { count: featuredUsers.length, duration: Date.now() - startTime + 'ms' });
+            console.log('[HomepageStore] ✅ 精选用户加载成功（假数据）', { count: featuredUsers.length, duration: Date.now() - startTime + 'ms' });
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : '精选用户加载失败';
             setError('featuredUsers', errorMsg);

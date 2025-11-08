@@ -104,6 +104,10 @@ export interface OtherUserInfo {
   weight?: number;
   skills?: string[];
   wechat?: string;
+  wechatMasked?: string;
+  wechatUnlockCondition?: number; // 0=公开, 1=关注后, 2=付费, 3=私密
+  wechatUnlockDesc?: string;
+  canViewWechat?: boolean;
   phone?: string;
   
   // 其他信息

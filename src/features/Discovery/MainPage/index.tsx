@@ -310,12 +310,8 @@ const useMainPageLogic = (props: MainPageProps) => {
    * 动态卡片点击
    */
   const handleFeedPress = useCallback((feedId: string) => {
-    // TODO: 创建详情页面路由后启用
     console.log('查看动态详情:', feedId);
-    // router.push({
-    //   pathname: ROUTES.DISCOVERY.DETAIL,
-    //   params: { feedId },
-    // });
+    router.push(`/feed/${feedId}` as any);
   }, [router]);
   
   /**

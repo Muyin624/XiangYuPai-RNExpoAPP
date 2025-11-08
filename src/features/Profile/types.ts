@@ -41,6 +41,7 @@ export interface UserProfile {
   age?: number;
   birthday?: string;
   bio?: string;
+  intro?: string; // 个人介绍（别名，与bio相同）
   
   // 位置信息
   location?: string;
@@ -59,12 +60,14 @@ export interface UserProfile {
   
   // 职业信息
   occupations?: string[];
+  occupation?: string; // 单个职业（简化版）
   
   // 认证标识
   isRealVerified?: boolean;  // 实名认证
   isGodVerified?: boolean;   // 大神认证
   isVip?: boolean;
   vipLevel?: number;
+  isPopular?: boolean;       // 热门用户
   
   // 在线状态
   isOnline?: boolean;
@@ -75,6 +78,11 @@ export interface UserProfile {
   followerCount?: number;   // 粉丝数
   likeCount?: number;       // 获赞数
   collectCount?: number;    // 收藏数
+  postCount?: number;       // 动态数
+  
+  // 技能和联系方式
+  skills?: string[];        // 技能列表
+  phone?: string;           // 电话号码
   
   // 时间
   createdAt?: number;
@@ -87,10 +95,15 @@ export interface UserProfile {
 export interface SkillItem {
   id: string;
   name: string;
-  icon: string;
-  type: 'game' | 'lifestyle';
-  price?: number;
-  rating?: number;
+  icon?: string;
+  iconId?: string;  // 图标ID
+  type?: 'game' | 'lifestyle';
+  skillType?: 'online' | 'offline';  // 技能类型：线上/线下
+  description?: string;  // 技能描述
+  level?: string;  // 段位/等级（线上）
+  location?: string;  // 地点（线下）
+  price?: number;  // 定价（金币/局）
+  rating?: number;  // 评分
 }
 
 /**

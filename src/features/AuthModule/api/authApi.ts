@@ -106,7 +106,7 @@ const API_ENDPOINTS = {
   VERIFY_CODE: '/auth/sms/verify',
   
   // 密码重置相关
-  SEND_RESET_CODE: '/auth/reset/send-code',
+  SEND_RESET_CODE: '/auth/sms/reset',
   VERIFY_RESET_CODE: '/auth/reset/verify-code',
   RESET_PASSWORD: '/auth/reset/password',
 } as const;
@@ -461,6 +461,79 @@ class AuthAPI {
     const response = await apiClient.post<ApiResponse>(API_ENDPOINTS.VERIFY_CODE, request);
     return response.data;
   }
+  
+  /**
+   * 发送重置密码验证码
+   */
+  async sendResetPasswordCode(phone: string, region: string): Promise<SendCodeResponse> {
+    if (!validator.phone(phone, region)) {
+      throw new Error('手机号格式不正确');
+    }
+    
+    const request: SendCodeRequest = {
+      phone,
+      region,
+      type: 'reset',
+    };
+    
+    const response = await retryHandler.execute(
+      () => apiClient.post<SendCodeResponse>(API_ENDPOINTS.SEND_RESET_CODE, request)
+    );
+    
+    return response.data;
+  }
+  
+  /**
+   * 验证重置密码验证码
+   */
+  async verifyResetCode(phone: string, code: string, region: string): Promise<ApiResponse> {
+    if (!validator.phone(phone, region)) {
+      throw new Error('手机号格式不正确');
+    }
+    
+    if (!validator.code(code)) {
+      throw new Error('验证码格式不正确');
+    }
+    
+    const request = {
+      phone,
+      code,
+      region,
+    };
+    
+    const response = await apiClient.post<ApiResponse>(API_ENDPOINTS.VERIFY_RESET_CODE, request);
+    return response.data;
+  }
+  
+  /**
+   * 重置密码
+   */
+  async resetPassword(phone: string, code: string, newPassword: string, region: string): Promise<ApiResponse> {
+    if (!validator.phone(phone, region)) {
+      throw new Error('手机号格式不正确');
+    }
+    
+    if (!validator.code(code)) {
+      throw new Error('验证码格式不正确');
+    }
+    
+    if (!validator.password(newPassword)) {
+      throw new Error('密码长度至少6位');
+    }
+    
+    const request = {
+      phone,
+      code,
+      newPassword,
+      region,
+    };
+    
+    const response = await retryHandler.execute(
+      () => apiClient.post<ApiResponse>(API_ENDPOINTS.RESET_PASSWORD, request)
+    );
+    
+    return response.data;
+  }
 }
 
 // #endregion
@@ -549,6 +622,40 @@ export const mockAuthApi = {
         nextSendTime: 60, // 60秒后可重发
       },
       message: '验证码发送成功',
+    };
+  },
+  
+  async sendResetPasswordCode(phone: string, region: string): Promise<SendCodeResponse> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    return {
+      success: true,
+      data: {
+        codeId: 'mock_code_id_' + Date.now(),
+        expiresIn: 300, // 5分钟
+        nextSendTime: 60, // 60秒后可重发
+      },
+      message: '重置密码验证码发送成功',
+    };
+  },
+  
+  async verifyResetCode(phone: string, code: string, region: string): Promise<ApiResponse> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return {
+      success: true,
+      data: {},
+      message: '验证码验证成功',
+    };
+  },
+  
+  async resetPassword(phone: string, code: string, newPassword: string, region: string): Promise<ApiResponse> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return {
+      success: true,
+      data: {},
+      message: '密码重置成功',
     };
   },
 };

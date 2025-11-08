@@ -8,7 +8,7 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
+import { ImageBackground, StyleSheet } from 'react-native';
 
 import { BACKGROUND_HEIGHT, COLORS } from '../constants';
 import type { BackgroundLayerProps } from '../types';
@@ -37,10 +37,16 @@ const BackgroundLayer: React.FC<BackgroundLayerProps> = ({ backgroundImage }) =>
     );
   }
 
+  // 使用紫色渐变背景（参考UI设计）
   return (
-    <View style={[styles.background, styles.defaultBackground]}>
+    <LinearGradient
+      colors={['#9D5BD2', '#7B3FB8', '#6B2FAA']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.background}
+    >
       {renderContent()}
-    </View>
+    </LinearGradient>
   );
 };
 

@@ -12,6 +12,7 @@ export interface UnifiedHeaderAreaProps {
   nickname: string;
   gender?: 1 | 2; // 1: male, 2: female
   age?: number;
+  height?: number; // 身高（cm）
   
   // Verification Badges
   isRealVerified?: boolean; // 真人认证
@@ -22,6 +23,8 @@ export interface UnifiedHeaderAreaProps {
   isOnline?: boolean; // 在线状态
   distance?: number; // 距离（km）
   followerCount?: number; // 粉丝数
+  followingCount?: number; // 关注数
+  likeCount?: number; // 获赞数
   
   // Follow Status (for other user's profile)
   isFollowing?: boolean;
@@ -37,6 +40,9 @@ export interface UnifiedHeaderAreaProps {
   onBack?: () => void;
   onEditPress?: () => void;
   onFollowPress?: () => void;
+  onFollowingPress?: () => void; // 点击关注数
+  onFollowerPress?: () => void; // 点击粉丝数
+  onLikePress?: () => void; // 点击获赞数
 }
 
 export interface TagItem {

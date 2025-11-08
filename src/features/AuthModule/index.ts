@@ -5,6 +5,7 @@
  */
 
 // #region 主要页面组件
+export { default as ForgotPasswordPage } from './ForgotPasswordPage';
 export { default as LoginMainPage } from './LoginMainPage';
 
 // #endregion
