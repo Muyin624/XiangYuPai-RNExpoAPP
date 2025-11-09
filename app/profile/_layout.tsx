@@ -110,6 +110,177 @@ export default function ProfileLayout() {
           animation: 'slide_from_right',
         }} 
       />
+      
+      {/* 我的订单列表 */}
+      <Stack.Screen 
+        name="my-orders" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 订单详情 */}
+      <Stack.Screen 
+        name="order-detail" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 我的购买列表 */}
+      <Stack.Screen 
+        name="my-purchases" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 购买订单详情 */}
+      <Stack.Screen 
+        name="purchase-detail" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 我的报名列表 */}
+      <Stack.Screen 
+        name="my-signups" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 报名详情 */}
+      <Stack.Screen 
+        name="signup-detail" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 状态管理 */}
+      <Stack.Screen 
+        name="my-status" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 钱包主页 */}
+      <Stack.Screen 
+        name="wallet" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 钱包提现 */}
+      <Stack.Screen 
+        name="wallet-withdraw" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 钱包提现成功 */}
+      <Stack.Screen 
+        name="wallet-withdraw-success" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 钱包账单明细 */}
+      <Stack.Screen 
+        name="wallet-bills" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 金币主页 */}
+      <Stack.Screen 
+        name="coins" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 金币充值 */}
+      <Stack.Screen 
+        name="coins-recharge" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 金币充值成功 */}
+      <Stack.Screen 
+        name="coins-recharge-success" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 金币明细 */}
+      <Stack.Screen 
+        name="coins-bills" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 设置 */}
+      <Stack.Screen 
+        name="settings" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 支付密码 */}
+      <Stack.Screen 
+        name="payment-password" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 客服 */}
+      <Stack.Screen 
+        name="customer-service" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
+      
+      {/* 达人认证 */}
+      <Stack.Screen 
+        name="expert-verification" 
+        options={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }} 
+      />
     </Stack>
   );
 }

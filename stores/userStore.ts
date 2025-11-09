@@ -25,11 +25,13 @@ export interface User {
   rating: number;
   reviewCount: number;
   isOnline: boolean;
+  isHot?: boolean; // 是否热门
   lastActiveTime: string;
   serviceTypes: string[];
   description: string;
   images: string[];
   skills: Array<{
+    id?: string;
     type: string;
     level: string;
     price: number;
@@ -155,38 +157,55 @@ const initialState = {
 // 模拟用户数据生成器
 const generateMockUsers = (page: number, limit: number): User[] => {
   const users: User[] = [];
-  const names = ['小明', '小红', '大神', '萌妹子', '技术宅', '游戏达人', '温柔小姐姐', '幽默大叔'];
+  const names = ['昵称123', '小红', '大神', '萌妹子', '技术宅', '游戏达人', '温柔小姐姐', '幽默大叔'];
   const cities = ['北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '西安'];
   const serviceTypes = ['honor_of_kings', 'league_of_legends', 'explore_shop', 'ktv', 'billiards'];
+  const gameTags = [
+    ['荣耀王者', '能接技术', '王者上分'],
+    ['最强王者', '陪玩上分', '语音开黑'],
+    ['星耀段位', '温柔陪玩', '技术指导'],
+    ['钻石段位', '快乐陪玩', '随时在线'],
+  ];
+  const descriptions = [
+    '主打鲜耗位置和能技术不成熟性这里是真的介绍区域这里是真的介绍区域',
+    '专业陪玩，技术过硬，语音甜美，带你上分不是梦',
+    '王者荣耀资深玩家，擅长打野和辅助，欢迎来撩',
+    '温柔小姐姐在线陪玩，技术还可以，主要是声音好听',
+  ];
   
   for (let i = 0; i < limit; i++) {
     const index = (page - 1) * limit + i;
+    const isFemale = index % 3 === 0;
+    const distance = (Math.random() * 10 + 0.5).toFixed(1); // 0.5-10.5km
+    
     users.push({
       id: `user_${index + 1}`,
-      name: `${names[index % names.length]}${index + 1}`,
+      name: `${names[index % names.length]}`,
       avatar: `https://example.com/avatar${(index % 10) + 1}.jpg`,
       age: 18 + (index % 15),
-      gender: index % 3 === 0 ? 'female' : index % 3 === 1 ? 'male' : 'other',
+      gender: isFemale ? 'female' : 'male',
       height: 155 + (index % 30), // 身高: 155-185cm
       location: {
         city: cities[index % cities.length],
         district: `${cities[index % cities.length]}区`,
-        distance: Math.floor(Math.random() * 50) + 1,
+        distance: parseFloat(distance) * 1000, // 转换为米
       },
-      tags: [`标签${(index % 5) + 1}`, `技能${(index % 3) + 1}`],
-      price: 30 + (index % 100),
-      rating: 4.0 + Math.random(),
-      reviewCount: Math.floor(Math.random() * 500) + 10,
+      tags: gameTags[index % gameTags.length],
+      price: [10, 15, 20, 25, 30][index % 5],
+      rating: 4.5 + (Math.random() * 0.5),
+      reviewCount: Math.floor(Math.random() * 500) + 100,
       isOnline: index % 4 !== 0,
+      isHot: index % 5 === 0, // 添加HOT标记
       lastActiveTime: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString(),
       serviceTypes: [serviceTypes[index % serviceTypes.length]],
-      description: `我是用户${index + 1}，擅长游戏和生活服务。`,
+      description: descriptions[index % descriptions.length],
       images: [`https://example.com/image${(index % 5) + 1}.jpg`],
       skills: [
         {
+          id: `skill_${index + 1}`,
           type: serviceTypes[index % serviceTypes.length],
-          level: ['青铜', '白银', '黄金', '铂金', '钻石'][index % 5],
-          price: 30 + (index % 50),
+          level: ['荣耀王者', '最强王者', '星耀', '钻石', '铂金'][index % 5],
+          price: [10, 15, 20, 25, 30][index % 5],
         },
       ],
       // 社交统计数据

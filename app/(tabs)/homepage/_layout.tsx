@@ -33,8 +33,7 @@ export default function HomepageLayout() {
         name="search" 
         options={{
           title: '搜索',
-          headerShown: true,
-          headerBackTitle: '返回',
+          headerShown: false,
         }} 
       />
       
@@ -98,6 +97,15 @@ export default function HomepageLayout() {
           title: '限时专享',
           headerShown: true,
           headerBackTitle: '返回',
+        }} 
+      />
+      
+      {/* 发布组局页面 */}
+      <Stack.Screen 
+        name="publish-event" 
+        options={{
+          title: '发布组局',
+          headerShown: false,
         }} 
       />
     </Stack>

@@ -37,7 +37,7 @@ const MyPage = () => {
   // 文档区域菜单项
   const documentItems = [
     { id: 'publish', label: '我的发布', icon: '📝', route: '/profile/my-posts' },
-    { id: 'order', label: '我的订单', icon: '📋', route: '/profile/my-orders' },
+    { id: 'order', label: '我的订单', icon: '📋', route: '/profile/my-orders' }, // ✅ 已实现
     { id: 'purchase', label: '我的购买', icon: '🛍️', route: '/profile/my-purchases' },
     { id: 'signup', label: '我的报名', icon: '📢', route: '/profile/my-signups' },
   ];
@@ -46,7 +46,7 @@ const MyPage = () => {
   const moreItems = [
     { id: 'personal', label: '个人中心', icon: '👤', route: '/profile/personal-center' },
     { id: 'wallet', label: '钱包', icon: '💰', route: '/profile/wallet' },
-    { id: 'verify', label: '认证', icon: '✅', route: '/profile/verification' },
+    { id: 'status', label: '状态', icon: '🔄', route: '/profile/my-status' },
     { id: 'coin', label: '金币', icon: '🪙', route: '/profile/coins' },
     { id: 'settings', label: '设置', icon: '⚙️', route: '/profile/settings' },
     { id: 'service', label: '客服', icon: '🏠', route: '/profile/customer-service' },
@@ -66,6 +66,60 @@ const MyPage = () => {
     // 特殊处理：我的发布
     if (route === '/profile/my-posts') {
       router.push('/profile/my-posts');
+      return;
+    }
+    
+    // 特殊处理：我的订单（服务提供者视角）
+    if (route === '/profile/my-orders') {
+      router.push('/profile/my-orders');
+      return;
+    }
+    
+    // 特殊处理：我的购买（客户视角）
+    if (route === '/profile/my-purchases') {
+      router.push('/profile/my-purchases');
+      return;
+    }
+    
+    // 特殊处理：我的报名
+    if (route === '/profile/my-signups') {
+      router.push('/profile/my-signups');
+      return;
+    }
+    
+    // 特殊处理：状态管理
+    if (route === '/profile/my-status') {
+      router.push('/profile/my-status');
+      return;
+    }
+    
+    // 特殊处理：钱包
+    if (route === '/profile/wallet') {
+      router.push('/profile/wallet');
+      return;
+    }
+    
+    // 特殊处理：金币
+    if (route === '/profile/coins') {
+      router.push('/profile/coins');
+      return;
+    }
+    
+    // 特殊处理：设置
+    if (route === '/profile/settings') {
+      router.push('/profile/settings');
+      return;
+    }
+    
+    // 特殊处理：客服
+    if (route === '/profile/customer-service') {
+      router.push('/profile/customer-service');
+      return;
+    }
+    
+    // 特殊处理：达人认证
+    if (route === '/profile/expert-verification') {
+      router.push('/profile/expert-verification');
       return;
     }
     

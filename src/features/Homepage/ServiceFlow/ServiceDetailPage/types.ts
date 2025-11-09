@@ -25,6 +25,8 @@ export interface ServiceDetailPageProps {
   serviceType: ServiceType;
   serviceCategory?: ServiceCategory;
   initialFilters?: FilterState;
+  isLimitedOffer?: boolean; // 是否为限时优惠
+  userId?: string; // 可选：特定用户ID
   style?: StyleProp<ViewStyle>;
 }
 

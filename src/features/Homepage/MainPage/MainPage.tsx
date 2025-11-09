@@ -25,12 +25,12 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import {
-  ImageBackground,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ImageBackground,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 // 类型和常量
@@ -39,13 +39,13 @@ import type { UserCard } from './types';
 
 // 区域组件
 import {
-  FilterTabsArea,
-  FunctionGridArea,
-  GameBannerArea,
-  HeaderArea,
-  LimitedOffersArea,
-  TeamPartyArea,
-  UserListArea,
+    FilterTabsArea,
+    FunctionGridArea,
+    GameBannerArea,
+    HeaderArea,
+    LimitedOffersArea,
+    TeamPartyArea,
+    UserListArea,
 } from './components';
 
 // 状态管理Hooks
@@ -179,6 +179,23 @@ const useMainPageLogic = (props: MainPageProps) => {
   }, [router]);
   
   /**
+   * 限时专项用户点击处理 - 跳转到服务详情页（限时优惠价格）
+   */
+  const handleLimitedOfferPress = useCallback((user: UserCard) => {
+    console.log('[MainPage] 🧭 导航: 首页限时专项 → 服务详情页', { userId: user.id, username: user.username });
+    // 获取用户的主要服务类型，默认使用第一个服务或王者荣耀
+    const serviceType = user.services?.[0] || 'honor_of_kings';
+    router.push({
+      pathname: '/(tabs)/homepage/service-detail',
+      params: { 
+        serviceType: serviceType,
+        isLimitedOffer: 'true', // 标记为限时优惠
+        userId: user.id, // 可选：直接定位到特定用户
+      },
+    });
+  }, [router]);
+  
+  /**
    * 查看用户完整个人主页
    * 跳转到其他用户的完整主页（使用 OtherUserProfilePage）
    */
@@ -252,6 +269,7 @@ const useMainPageLogic = (props: MainPageProps) => {
     handleGameBannerPress,
     handleFunctionPress,
     handleUserPress,
+    handleLimitedOfferPress,
     handleViewUserProfile,
     handleGoToDiscovery,
     handleViewPost,
@@ -286,6 +304,7 @@ const MainPage: React.FC<MainPageProps> = (props) => {
     handleGameBannerPress,
     handleFunctionPress,
     handleUserPress,
+    handleLimitedOfferPress,
     handleViewUserProfile,
     handleGoToDiscovery,
     handleViewPost,
@@ -318,7 +337,7 @@ const MainPage: React.FC<MainPageProps> = (props) => {
       {/* 限时专享区域 */}
       <LimitedOffersArea
         offers={limitedOffers}
-        onUserPress={handleUserPress}
+        onUserPress={handleLimitedOfferPress}
         onMorePress={handleMoreOffersPress}
       />
       
@@ -344,7 +363,7 @@ const MainPage: React.FC<MainPageProps> = (props) => {
     handleGameBannerPress,
     handleFunctionPress,
     limitedOffers,
-    handleUserPress,
+    handleLimitedOfferPress,
     handleMoreOffersPress,
     handleTeamPartyPress,
     activeFilter,

@@ -9,7 +9,7 @@
 // #region 2. Imports
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUserStore } from '../../../../../stores';
 import { Card, ErrorBoundary } from '../../../../components';
 // #endregion
@@ -42,8 +42,16 @@ const useFeaturedLogic = () => {
     }
   }, [loadUserList]);
   
-  const handleUserPress = useCallback((userId: string) => {
-    router.push({ pathname: '/modal/user-detail' as any, params: { userId } });
+  const handleUserPress = useCallback((userId: string, serviceType?: string) => {
+    // 跳转到服务详情页（限时优惠）
+    router.push({ 
+      pathname: '/(tabs)/homepage/service-detail' as any, 
+      params: { 
+        serviceType: serviceType || 'honor_of_kings',
+        isLimitedOffer: 'true',
+        userId: userId
+      } 
+    });
   }, [router]);
   
   return { userList, loading, refreshing, handleRefresh, handleUserPress, handleBack: () => router.back() };
@@ -56,7 +64,8 @@ const FeaturedPage: React.FC<FeaturedPageProps> = () => {
   
   return (
     <ErrorBoundary>
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.BACKGROUND} />
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack}><Text style={styles.backButton}>←</Text></TouchableOpacity>
           <Text style={styles.title}>限时专享</Text>
@@ -66,11 +75,16 @@ const FeaturedPage: React.FC<FeaturedPageProps> = () => {
         <FlatList
           data={userList.data}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleUserPress(item.id)}>
+            <TouchableOpacity onPress={() => handleUserPress(item.id, item.services?.[0])}>
               <Card style={styles.userCard}>
                 <View style={styles.cardContent}>
-                  <Text style={styles.userName}>{item.name}</Text>
-                  <Text style={styles.userInfo}>⭐ {item.rating.toFixed(1)} · ¥{item.price}/小时</Text>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.userName}>{item.name}</Text>
+                    <View style={styles.limitedBadge}>
+                      <Text style={styles.limitedBadgeText}>限时</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.userInfo}>⭐ {item.rating.toFixed(1)} · ¥{Math.floor(item.price * 0.8)}/小时</Text>
                   <View style={styles.tagsContainer}>
                     {item.tags.slice(0, 2).map((tag, idx) => (
                       <View key={idx} style={styles.tag}><Text style={styles.tagText}>{tag}</Text></View>
@@ -91,7 +105,7 @@ const FeaturedPage: React.FC<FeaturedPageProps> = () => {
           }
           contentContainerStyle={styles.listContent}
         />
-      </View>
+      </SafeAreaView>
     </ErrorBoundary>
   );
 };
@@ -107,7 +121,10 @@ const styles = StyleSheet.create({
   listContent: { padding: 16 },
   userCard: { marginBottom: 12, padding: 16 },
   cardContent: {},
-  userName: { fontSize: 16, fontWeight: '600', color: COLORS.TEXT, marginBottom: 4 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  userName: { fontSize: 16, fontWeight: '600', color: COLORS.TEXT },
+  limitedBadge: { backgroundColor: '#FF4D4F', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  limitedBadgeText: { fontSize: 10, fontWeight: '600', color: '#FFFFFF' },
   userInfo: { fontSize: 14, color: COLORS.TEXT_SECONDARY, marginBottom: 8 },
   tagsContainer: { flexDirection: 'row' },
   tag: { backgroundColor: COLORS.PRIMARY, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginRight: 6 },

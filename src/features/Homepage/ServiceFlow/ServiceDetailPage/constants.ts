@@ -172,11 +172,10 @@ export const FILTER_OPTIONS = {
 // 游戏服务标签
 export const GAME_SERVICE_TAGS: Record<string, Array<{ id: string; name: string }>> = {
   honor_of_kings: [
-    { id: 'rank_up', name: '上分' },
-    { id: 'companion', name: '陪玩' },
-    { id: 'voice', name: '语音' },
-    { id: 'coaching', name: '代练' },
-    { id: 'spectate', name: '观战' },
+    { id: 'master', name: '荣誉主者' },
+    { id: 'rank_up', name: '荣耀上分' },
+    { id: 'esports', name: '电竞陪练师' },
+    { id: 'casual', name: '随玩' },
   ],
   league_of_legends: [
     { id: 'rank_up', name: '上分' },
@@ -222,9 +221,36 @@ export const LIFESTYLE_SERVICE_TAGS: Record<string, Array<{ id: string; name: st
   ]
 };
 
+// 功能ID到服务类型的映射
+export const FUNCTION_ID_TO_SERVICE_TYPE: Record<string, ServiceType> = {
+  '1': 'honor_of_kings',      // 王者荣耀
+  '2': 'league_of_legends',   // 英雄联盟
+  '3': 'pubg_mobile',         // 和平精英
+  '4': 'brawl_stars',         // 荒野乱斗
+  '5': 'explore_shop',        // 探店
+  '6': 'private_cinema',      // 私影
+  '7': 'billiards',           // 台球
+  '8': 'ktv',                 // K歌
+  '9': 'drinking',            // 喝酒
+  '10': 'massage',            // 按摩
+  
+  // 也支持直接使用服务类型名称
+  'honor_of_kings': 'honor_of_kings',
+  'league_of_legends': 'league_of_legends',
+  'pubg_mobile': 'pubg_mobile',
+  'brawl_stars': 'brawl_stars',
+  'explore_shop': 'explore_shop',
+  'private_cinema': 'private_cinema',
+  'billiards': 'billiards',
+  'ktv': 'ktv',
+  'drinking': 'drinking',
+  'massage': 'massage',
+};
+
 // 路由常量
 export const SERVICE_DETAIL_ROUTES = {
   USER_DETAIL: '/modal/user-detail',
+  SKILL_DETAIL: '/skill',
   FILTER_ONLINE: '/(tabs)/homepage/filter-online',
   FILTER_OFFLINE: '/(tabs)/homepage/filter-offline',
   SEARCH: '/(tabs)/homepage/search',

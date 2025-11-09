@@ -20,8 +20,9 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    FlatList,
     Keyboard,
+    SafeAreaView,
+    StatusBar,
     StyleSheet,
     Text,
     TextInput,
@@ -34,6 +35,9 @@ import { useUserStore } from '../../../../../stores';
 
 // 共享组件
 import { ErrorBoundary, LoadingOverlay } from '../../../../components';
+
+// 搜索结果页面
+import SearchResultsPage from '../SearchResultsPage';
 
 // 类型和常量
 import type { HotSearchItem, SearchCategory, SearchHistoryItem, SearchMainPageProps, SearchResults, SearchSuggestion, SearchViewState } from './types';
@@ -339,75 +343,59 @@ const SearchMainPage: React.FC<SearchMainPageProps> = (props) => {
   
   return (
     <ErrorBoundary>
-      <View style={styles.container}>
-        {/* 搜索导航 */}
-        <SearchNavigationArea
-          query={logic.localState.query}
-          onQueryChange={logic.handleQueryChange}
-          onSearchSubmit={() => logic.executeSearch(logic.localState.query)}
-          onBack={logic.handleBack}
-        />
-        
-        {/* 空状态 - 显示历史和热门 */}
-        {logic.localState.viewState === 'empty' && (
-          <View style={styles.emptyStateContent}>
-            <SearchHistoryArea
-              historyItems={logic.searchHistory}
-              onHistorySelect={logic.handleHistorySelect}
-              onHistoryDelete={logic.handleHistoryDelete}
-              onClearAll={logic.handleClearHistory}
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.BACKGROUND} />
+        {/* 结果状态 - 使用新的搜索结果页面（包含自己的搜索栏） */}
+        {logic.localState.viewState === 'results' ? (
+          <SearchResultsPage 
+            query={logic.localState.query}
+            onBack={logic.handleBack}
+            onQueryChange={logic.handleQueryChange}
+            onSearchSubmit={() => logic.executeSearch(logic.localState.query)}
+          />
+        ) : (
+          <>
+            {/* 搜索导航 - 仅在非结果状态显示 */}
+            <SearchNavigationArea
+              query={logic.localState.query}
+              onQueryChange={logic.handleQueryChange}
+              onSearchSubmit={() => logic.executeSearch(logic.localState.query)}
+              onBack={logic.handleBack}
             />
             
-            <HotSearchArea
-              hotSearches={logic.hotSearches}
-              onHotSearchSelect={logic.handleHistorySelect}
-            />
-          </View>
-        )}
-        
-        {/* 建议状态 */}
-        {logic.localState.viewState === 'suggestions' && (
-          <View style={styles.suggestionsContent}>
-            <Text style={styles.placeholderText}>
-              搜索建议功能开发中...
-            </Text>
-          </View>
-        )}
-        
-        {/* 结果状态 */}
-        {logic.localState.viewState === 'results' && (
-          <View style={styles.resultsContent}>
-            {logic.searchStore.results.length > 0 ? (
-              <FlatList
-                data={logic.searchStore.results}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.resultItem}
-                    onPress={() => logic.handleResultPress(item.id, 'user')}
-                  >
-                    <Text style={styles.resultName}>{item.name}</Text>
-                    <Text style={styles.resultInfo}>
-                      ⭐ {item.rating.toFixed(1)} · ¥{item.price}/小时
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                keyExtractor={item => item.id}
-              />
-            ) : (
-              <View style={styles.noResults}>
-                <Text style={styles.noResultsIcon}>🔍</Text>
-                <Text style={styles.noResultsText}>没有找到相关结果</Text>
-                <Text style={styles.noResultsHint}>试试其他关键词</Text>
+            {/* 空状态 - 显示历史和热门 */}
+            {logic.localState.viewState === 'empty' && (
+              <View style={styles.emptyStateContent}>
+                <SearchHistoryArea
+                  historyItems={logic.searchHistory}
+                  onHistorySelect={logic.handleHistorySelect}
+                  onHistoryDelete={logic.handleHistoryDelete}
+                  onClearAll={logic.handleClearHistory}
+                />
+                
+                <HotSearchArea
+                  hotSearches={logic.hotSearches}
+                  onHotSearchSelect={logic.handleHistorySelect}
+                />
               </View>
             )}
-          </View>
+            
+            {/* 建议状态 */}
+            {logic.localState.viewState === 'suggestions' && (
+              <View style={styles.suggestionsContent}>
+                <Text style={styles.placeholderText}>
+                  搜索建议功能开发中...
+                </Text>
+              </View>
+            )}
+          </>
         )}
         
         {/* 加载状态 */}
         {logic.localState.loading && (
           <LoadingOverlay loading={logic.localState.loading} text="搜索中..." />
         )}
-      </View>
+      </SafeAreaView>
     </ErrorBoundary>
   );
 };
@@ -550,46 +538,6 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     paddingTop: 40,
-  },
-  
-  // 结果内容
-  resultsContent: {
-    flex: 1,
-  },
-  resultItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
-  },
-  resultName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.TEXT,
-    marginBottom: 4,
-  },
-  resultInfo: {
-    fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
-  },
-  
-  // 无结果状态
-  noResults: {
-    paddingTop: 100,
-    alignItems: 'center',
-  },
-  noResultsIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  noResultsText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.TEXT,
-    marginBottom: 8,
-  },
-  noResultsHint: {
-    fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
   },
 });
 
