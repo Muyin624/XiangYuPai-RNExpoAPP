@@ -1,10 +1,10 @@
 /**
- * User Profile Screen - 用户主页路由
+ * User Profile Screen - 个人主页路由
  * 
  * Route: /profile/[userId]
  * 
  * Features:
- * - 查看其他用户的完整主页
+ * - 查看其他用户的个人主页
  * - 动态参数路由
  * - 错误边界保护
  */

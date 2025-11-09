@@ -17,10 +17,13 @@
 // #endregion
 
 // #region 2. Imports
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     FlatList,
+    Image,
     Platform,
     RefreshControl,
     SafeAreaView,
@@ -35,7 +38,7 @@ import {
 import { useConfigStore, useUserStore } from '../../../../../stores';
 
 // 共享组件
-import { Card, ErrorBoundary, LoadingOverlay } from '../../../../components';
+import { ErrorBoundary, LoadingOverlay } from '../../../../components';
 
 // 本地组件
 import type { AdvancedFilters, GenderOption, SortOption } from './components';
@@ -316,7 +319,7 @@ const useServiceDetailLogic = (serviceType: ServiceType) => {
   }, []);
   
   /**
-   * 点击服务提供者 - 跳转到技能详情页
+   * 点击服务提供者 - 跳转到详情页
    */
   const handleProviderPress = useCallback((provider: any) => {
     // 获取用户的第一个技能作为默认技能
@@ -471,24 +474,33 @@ const ServiceNavigationArea: React.FC<{
   onBack: () => void;
   onSearch?: () => void;
 }> = ({ serviceName, isLimitedOffer, onBack, onSearch }) => (
-  <View style={styles.navigationArea}>
+  <LinearGradient
+    colors={['#FFFFFF', '#F8F9FF']}
+    style={styles.navigationArea}
+  >
     <TouchableOpacity style={styles.backButton} onPress={onBack}>
-      <Text style={styles.backButtonText}>←</Text>
+      <Ionicons name="chevron-back" size={24} color="#333" />
     </TouchableOpacity>
     <View style={styles.navigationTitleContainer}>
       <Text style={styles.navigationTitle}>{serviceName}</Text>
       {isLimitedOffer && (
-        <View style={styles.navigationLimitedBadge}>
+        <LinearGradient
+          colors={['#FF6B6B', '#FF4757']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.navigationLimitedBadge}
+        >
+          <Ionicons name="flash" size={10} color="#FFF" style={{ marginRight: 2 }} />
           <Text style={styles.navigationLimitedText}>限时优惠</Text>
-        </View>
+        </LinearGradient>
       )}
     </View>
     {onSearch && (
       <TouchableOpacity style={styles.searchButton} onPress={onSearch}>
-        <Text style={styles.searchButtonText}>🔍</Text>
+        <Ionicons name="search" size={20} color="#666" />
       </TouchableOpacity>
     )}
-  </View>
+  </LinearGradient>
 );
 
 /**
@@ -527,27 +539,43 @@ const ServiceFilterToolbar: React.FC<{
         style={[styles.filterButton, filterState.sortBy !== 'smart' && styles.filterButtonActive]}
         onPress={onSortPress}
       >
+        <Ionicons 
+          name={filterState.sortBy === 'smart' ? 'sparkles-outline' : 'sparkles'} 
+          size={14} 
+          color={filterState.sortBy !== 'smart' ? '#7C3AED' : '#666'} 
+          style={{ marginRight: 4 }}
+        />
         <Text style={[
           styles.filterButtonText,
           filterState.sortBy !== 'smart' && styles.filterButtonTextActive
-        ]}>{getSortLabel()} ▼</Text>
+        ]}>{getSortLabel()}</Text>
+        <Ionicons name="chevron-down" size={12} color={filterState.sortBy !== 'smart' ? '#7C3AED' : '#666'} style={{ marginLeft: 2 }} />
       </TouchableOpacity>
       
       <TouchableOpacity
         style={[styles.filterButton, filterState.gender !== 'all' && styles.filterButtonActive]}
         onPress={onGenderPress}
       >
+        <Ionicons 
+          name={filterState.gender === 'female' ? 'female' : filterState.gender === 'male' ? 'male' : 'people-outline'} 
+          size={14} 
+          color={filterState.gender !== 'all' ? '#7C3AED' : '#666'} 
+          style={{ marginRight: 4 }}
+        />
         <Text style={[
           styles.filterButtonText,
           filterState.gender !== 'all' && styles.filterButtonTextActive
-        ]}>{getGenderLabel()} ▼</Text>
+        ]}>{getGenderLabel()}</Text>
+        <Ionicons name="chevron-down" size={12} color={filterState.gender !== 'all' ? '#7C3AED' : '#666'} style={{ marginLeft: 2 }} />
       </TouchableOpacity>
       
       <TouchableOpacity
         style={styles.filterButton}
         onPress={onAdvancedFilter}
       >
-        <Text style={styles.filterButtonText}>筛选 ▼</Text>
+        <Ionicons name="options-outline" size={14} color="#666" style={{ marginRight: 4 }} />
+        <Text style={styles.filterButtonText}>筛选</Text>
+        <Ionicons name="chevron-down" size={12} color="#666" style={{ marginLeft: 2 }} />
       </TouchableOpacity>
     </View>
   );
@@ -594,25 +622,43 @@ const ProviderCard: React.FC<{
   
   return (
   <TouchableOpacity style={styles.providerCard} onPress={onPress} activeOpacity={0.9}>
-    <Card style={styles.cardContainer}>
-      <View style={styles.cardContent}>
-        {/* 左侧：头像区域 */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarPlaceholder}>👤</Text>
+    <View style={styles.cardContainer}>
+      <LinearGradient
+        colors={['#FFFFFF', '#FAFBFF']}
+        style={styles.cardGradient}
+      >
+        <View style={styles.cardContent}>
+          {/* 左侧：头像区域 */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarWrapper}>
+              <LinearGradient
+                colors={['#E0E7FF', '#C7D2FE']}
+                style={styles.avatar}
+              >
+                <Image 
+                  source={{ uri: provider.avatar || 'https://picsum.photos/60' }} 
+                  style={styles.avatarImage}
+                />
+              </LinearGradient>
+              {provider.isOnline && (
+                <View style={styles.statusDotWrapper}>
+                  <View style={styles.statusDot} />
+                </View>
+              )}
             </View>
-            {provider.isOnline && (
-              <View style={styles.statusDot} />
+            {/* HOT标签 */}
+            {provider.isHot && (
+              <LinearGradient
+                colors={['#FF6B6B', '#FF4757']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.hotBadge}
+              >
+                <Ionicons name="flame" size={10} color="#FFF" />
+                <Text style={styles.hotBadgeText}>HOT</Text>
+              </LinearGradient>
             )}
           </View>
-          {/* HOT标签 */}
-          {provider.isHot && (
-            <View style={styles.hotBadge}>
-              <Text style={styles.hotBadgeText}>HOT</Text>
-            </View>
-          )}
-        </View>
         
         {/* 中间：用户信息区域 */}
         <View style={styles.userInfoSection}>
@@ -620,31 +666,39 @@ const ProviderCard: React.FC<{
           <View style={styles.nameRow}>
             <Text style={styles.userName}>{provider.name}</Text>
             {provider.gender === 'female' && (
-              <View style={styles.genderBadge}>
+              <LinearGradient
+                colors={['#FFE4E8', '#FFD4DC']}
+                style={styles.genderBadge}
+              >
+                <Ionicons name="female" size={10} color="#FF4D6D" />
                 <Text style={styles.genderBadgeText}>女神</Text>
-              </View>
+              </LinearGradient>
             )}
-            <Text style={styles.distance}>{formatDistance(provider.location.distance || 0)}</Text>
+            <View style={styles.distanceContainer}>
+              <Ionicons name="location" size={10} color="#999" />
+              <Text style={styles.distance}>{formatDistance(provider.location.distance || 0)}</Text>
+            </View>
           </View>
           
           {/* 标签区域 */}
           <View style={styles.tagsSection}>
             {provider.tags.slice(0, 3).map((tag: string, index: number) => (
-              <View 
-                key={index} 
-                style={[
-                  styles.tag,
-                  index === 0 && styles.tagPrimary,
-                  index === 1 && styles.tagSecondary,
-                  index === 2 && styles.tagTertiary,
-                ]}
+              <LinearGradient
+                key={index}
+                colors={
+                  index === 0 ? ['#E6F7FF', '#D6EFFF'] :
+                  index === 1 ? ['#FFF7E6', '#FFEFD6'] :
+                  ['#F6FFED', '#E8FFD6']
+                }
+                style={styles.tag}
               >
                 <Text style={styles.tagText}>{tag}</Text>
-              </View>
+              </LinearGradient>
             ))}
             {provider.rating && (
               <View style={styles.ratingTag}>
-                <Text style={styles.ratingText}>⭐ {provider.rating.toFixed(1)}</Text>
+                <Ionicons name="star" size={10} color="#FA8C16" />
+                <Text style={styles.ratingText}>{provider.rating.toFixed(1)}</Text>
               </View>
             )}
           </View>
@@ -656,8 +710,9 @@ const ProviderCard: React.FC<{
           
           {/* 底部信息：位置和服务信息 */}
           <View style={styles.bottomInfo}>
+            <Ionicons name="location-outline" size={11} color="#999" />
             <Text style={styles.locationText}>
-              📍 {provider.location.city || '深圳'} · 荣耀王者 · 创建1-800+
+              {provider.location.city || '深圳'} · 荣耀王者 · 创建1-800+
             </Text>
           </View>
         </View>
@@ -665,20 +720,27 @@ const ProviderCard: React.FC<{
         {/* 右侧：价格区域 */}
         <View style={styles.priceSection}>
           {isLimitedOffer && (
-            <View style={styles.limitedOfferBadge}>
-              <Text style={styles.limitedOfferText}>限时</Text>
-            </View>
+            <LinearGradient
+              colors={['#FF6B6B', '#FF4757']}
+              style={styles.limitedOfferBadge}
+            >
+              <Ionicons name="flash" size={10} color="#FFF" />
+            </LinearGradient>
           )}
-          <View style={styles.priceContainer}>
+          <LinearGradient
+            colors={['#FFF5F5', '#FFE8E8']}
+            style={styles.priceContainer}
+          >
             <Text style={styles.price}>{discountedPrice}</Text>
             {isLimitedOffer && (
               <Text style={styles.originalPrice}>{originalPrice}</Text>
             )}
-          </View>
-          <Text style={styles.priceUnit}>金币/局</Text>
+            <Text style={styles.priceUnit}>金币/局</Text>
+          </LinearGradient>
         </View>
-      </View>
-    </Card>
+        </View>
+      </LinearGradient>
+    </View>
   </TouchableOpacity>
   );
 };
@@ -877,15 +939,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    backgroundColor: COLORS.BACKGROUND,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.8)',
   },
   backButtonText: {
     fontSize: 24,
@@ -901,13 +967,19 @@ const styles = StyleSheet.create({
   navigationTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.TEXT,
+    color: '#333',
   },
   navigationLimitedBadge: {
-    backgroundColor: '#FF4D4F',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#FF4757',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   navigationLimitedText: {
     fontSize: 11,
@@ -919,6 +991,8 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.8)',
   },
   searchButtonText: {
     fontSize: 20,
@@ -932,26 +1006,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: COLORS.BACKGROUND,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    borderBottomColor: '#F0F0F0',
   },
   filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 4,
-    backgroundColor: COLORS.BACKGROUND,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
     marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   filterButtonActive: {
     backgroundColor: '#F0E6FF',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   filterButtonText: {
     fontSize: 13,
-    color: COLORS.TEXT,
-    fontWeight: '400',
+    color: '#666',
+    fontWeight: '500',
   },
   filterButtonTextActive: {
     color: '#7C3AED',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   
   // 服务标签栏样式
@@ -1002,7 +1088,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cardContainer: {
-    padding: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
+    backgroundColor: '#FFF',
+  },
+  cardGradient: {
+    padding: 14,
   },
   cardContent: {
     flexDirection: 'row',
@@ -1010,48 +1106,67 @@ const styles = StyleSheet.create({
   
   // 头像样式
   avatarSection: {
-    marginRight: 10,
+    marginRight: 12,
     alignItems: 'center',
   },
   avatarWrapper: {
     position: 'relative',
-    width: 60,
-    height: 60,
+    width: 64,
+    height: 64,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: COLORS.SURFACE,
+    width: 64,
+    height: 64,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
   avatarPlaceholder: {
     fontSize: 28,
   },
-  statusDot: {
+  statusDotWrapper: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: COLORS.ONLINE,
-    borderWidth: 2,
-    borderColor: COLORS.BACKGROUND,
+    bottom: 2,
+    right: 2,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    padding: 2,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#52C41A',
   },
   hotBadge: {
-    marginTop: 4,
-    backgroundColor: '#FF4D4F',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    shadowColor: '#FF4757',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   hotBadgeText: {
     fontSize: 10,
     fontWeight: '600',
     color: '#FFFFFF',
+    marginLeft: 2,
   },
   
   // 用户信息样式
@@ -1071,39 +1186,52 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   genderBadge: {
-    backgroundColor: '#FFE4E8',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
     marginRight: 6,
   },
   genderBadgeText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#FF4D6D',
+    marginLeft: 2,
+  },
+  distanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
   },
   distance: {
     fontSize: 11,
-    color: COLORS.TEXT_LIGHT,
-    marginLeft: 'auto',
+    color: '#999',
+    marginLeft: 2,
   },
   
   // 价格样式
   priceSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 50,
+    minWidth: 60,
     position: 'relative',
   },
   limitedOfferBadge: {
     position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#FF4D4F',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 1,
+    shadowColor: '#FF4757',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
   },
   limitedOfferText: {
     fontSize: 10,
@@ -1112,22 +1240,25 @@ const styles = StyleSheet.create({
   },
   priceContainer: {
     alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   price: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: '#FF4D4F',
   },
   originalPrice: {
     fontSize: 12,
     fontWeight: '400',
-    color: COLORS.TEXT_LIGHT,
+    color: '#999',
     textDecorationLine: 'line-through',
     marginTop: 2,
   },
   priceUnit: {
-    fontSize: 11,
-    color: COLORS.TEXT_SECONDARY,
+    fontSize: 10,
+    color: '#666',
     marginTop: 2,
   },
   
@@ -1139,9 +1270,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tag: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
     marginRight: 4,
     marginBottom: 3,
   },
@@ -1157,19 +1288,22 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 10,
     fontWeight: '500',
-    color: COLORS.TEXT,
+    color: '#333',
   },
   ratingTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFF7E6',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
     marginRight: 4,
   },
   ratingText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#FA8C16',
+    marginLeft: 2,
   },
   
   // 描述样式
@@ -1187,27 +1321,31 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 11,
-    color: COLORS.TEXT_LIGHT,
+    color: '#999',
+    marginLeft: 2,
   },
   
   // 空状态样式
   emptyState: {
-    paddingTop: 100,
+    paddingTop: 120,
+    paddingHorizontal: 40,
     alignItems: 'center',
   },
   emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
+    fontSize: 72,
+    marginBottom: 20,
+    opacity: 0.6,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.TEXT,
+    color: '#333',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
+    color: '#999',
+    textAlign: 'center',
   },
   
   // 错误状态样式
@@ -1215,24 +1353,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 40,
   },
   errorText: {
     fontSize: 16,
     color: '#EF4444',
-    marginBottom: 20,
+    marginBottom: 24,
     textAlign: 'center',
+    lineHeight: 24,
   },
   retryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: COLORS.PRIMARY,
-    borderRadius: 8,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    backgroundColor: '#7C3AED',
+    borderRadius: 24,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   retryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.BACKGROUND,
+    color: '#FFFFFF',
   },
 });
 

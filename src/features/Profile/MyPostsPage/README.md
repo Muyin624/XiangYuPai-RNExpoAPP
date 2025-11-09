@@ -75,7 +75,7 @@ const data = await contentApi.getMyContents({
 
 - **路由配置**: `app/profile/_layout.tsx`
 - **路由文件**: `app/profile/my-posts.tsx`
-- **详情页**: `app/skill/[skillId].tsx` → `src/features/Profile/OtherUserProfilePage/SkillDetailPage/index.tsx`
+- **详情页**: `app/skill/[skillId].tsx` → `src/features/Profile/OtherUserProfilePage/DetailPage.tsx`
 - **管理页面**: `app/profile/manage-post.tsx` → `src/features/Profile/ManagePostPage/index.tsx`
 - **API接口**: `services/api/contentApi.ts`
 

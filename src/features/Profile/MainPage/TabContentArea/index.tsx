@@ -106,7 +106,7 @@ const TabContentArea: React.FC<TabContentAreaProps> = ({
           isOwnProfile={isOwnProfile}
           onSkillPress={(skillId) => {
             console.log('查看技能详情:', skillId);
-            // TODO: 跳转到技能详情页
+            // TODO: 跳转到详情页
           }}
           onAddSkillPress={() => {
             console.log('添加技能');

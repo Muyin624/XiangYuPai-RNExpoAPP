@@ -156,7 +156,7 @@ const SkillsContent: React.FC<{ userId: string }> = ({ userId }) => {
   // 处理技能点击
   const handleSkillPress = (skillId: string) => {
     console.log('点击技能:', skillId);
-    // 跳转到技能详情页
+    // 跳转到详情页
     router.push(`/skill/${skillId}?userId=${userId}` as any);
   };
   

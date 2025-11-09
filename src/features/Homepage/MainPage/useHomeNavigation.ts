@@ -14,9 +14,9 @@ import type { UserCard } from './types';
 export const useHomeNavigation = (navigation?: any) => {
   const router = useRouter();
   
-  // 用户点击处理 - 跳转到其他用户完整主页
+  // 用户点击处理 - 跳转到个人主页
   const handleUserPress = useCallback((user: UserCard) => {
-    console.log('[useHomeNavigation] 🧭 导航: 首页 → 其他用户主页', { userId: user.id });
+    console.log('[useHomeNavigation] 🧭 导航: 首页 → 个人主页', { userId: user.id });
     router.push({
       pathname: '/profile/[userId]',
       params: { userId: user.id },

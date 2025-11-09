@@ -98,7 +98,7 @@ export type ProfileStore = ProfileState & ProfileActions;
 /**
  * 生成模拟动态数据
  */
-const generateMockPosts = (count: number = 10): Post[] => {
+const generateMockPosts = (count: number = 10, isCurrentUser: boolean = true): Post[] => {
   const posts: Post[] = [];
   const titles = [
     '请你们看雪',
@@ -117,17 +117,22 @@ const generateMockPosts = (count: number = 10): Post[] => {
     'https://picsum.photos/400/450?random=',
   ];
   
+  // 🎯 根据是否是当前用户，使用不同的昵称
+  const mockNickname = isCurrentUser ? '我的昵称' : '他人昵称';
+  
   for (let i = 0; i < count; i++) {
     posts.push({
       id: `post_${Date.now()}_${i}`,
       userId: 'mock_user_001',
       userInfo: {
         id: 'mock_user_001',
-        nickname: '用户名称',
+        nickname: mockNickname,
         avatar: `https://picsum.photos/48/48?random=${i}`,
       },
       title: titles[i % titles.length],
-      content: '这是一段动态内容描述文字，可以很长也可以很短。',
+      content: isCurrentUser 
+        ? '这是我发布的动态内容，记录生活点滴。' 
+        : '这是他发布的动态内容，分享生活瞬间。',
       coverImage: `${images[i % images.length]}${i}`,
       mediaList: [{
         id: `media_${i}`,
@@ -229,16 +234,24 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
       await new Promise(resolve => setTimeout(resolve, 800));
       
       // 生成模拟用户资料
+      // 🎯 区分个人中心和他人主页的昵称
+      const isCurrentUser = !userId || userId === authState.userInfo?.id;
+      const mockNickname = isCurrentUser 
+        ? (authState.userInfo?.nickname || '我的昵称')  // 个人中心：我的昵称
+        : `他人昵称_${targetUserId?.slice(-4) || '0001'}`;  // 他人主页：他人昵称_XXXX
+      
       const profile: UserProfile = {
         id: targetUserId || 'mock_user_001',
-        nickname: authState.userInfo?.nickname || `用户${targetUserId?.slice(-4) || '0001'}`,
+        nickname: mockNickname,
         avatar: authState.userInfo?.avatar || `https://picsum.photos/96/96?random=${Date.now()}`,
         backgroundImage: `https://picsum.photos/800/500?random=${Date.now()}`,
         gender: 'male',
         age: 25,
         height: 175, // 身高 cm
         location: '深圳市',
-        bio: '这是一段个人简介，展示用户的个性和特点。热爱生活，喜欢交友。',
+        bio: isCurrentUser 
+          ? '这是我的个人简介，展示我的个性和特点。热爱生活，喜欢交友。' 
+          : '这是他的个人简介，展示他的个性和特点。热爱生活，喜欢交友。',
         skills: ['摄影', '旅游', '美食', '音乐'],
         followerCount: 1234,
         followingCount: 567,
@@ -344,7 +357,12 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
       console.log('   模拟网络延迟（800ms）');
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      const mockPosts = generateMockPosts(10);
+      // 🎯 判断是否是当前用户（用于生成不同的昵称）
+      const { currentProfile } = get();
+      const authState = useAuthStore.getState();
+      const isCurrentUser = !currentProfile?.id || currentProfile.id === authState.userInfo?.id;
+      
+      const mockPosts = generateMockPosts(10, isCurrentUser);
       const tabKey = tab as 'dynamic' | 'collection' | 'likes';
       
       set((state) => ({
@@ -364,6 +382,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
       }));
       
       console.log(`✅ ${tab}数据加载完成，共${mockPosts.length}条`);
+      console.log(`   昵称类型: ${isCurrentUser ? '我的昵称' : '他人昵称'}`);
       // =========================================
     } catch (error) {
       set({

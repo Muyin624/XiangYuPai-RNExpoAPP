@@ -1,21 +1,21 @@
 /**
- * Skill Detail Screen - 技能详情页路由
+ * Detail Screen - 详情页路由
  * 
  * Route: /skill/[skillId]
  * 
  * Features:
- * - 显示技能详细信息
+ * - 显示详细信息（技能/服务/组局等）
  * - 用户信息和评价
  * - 预约下单功能
  */
 
 import { ErrorBoundary } from '@/src/components';
-import SkillDetailPage from '@/src/features/Profile/OtherUserProfilePage/SkillDetailPage';
+import DetailPage from '@/src/features/Profile/OtherUserProfilePage/DetailPage';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function SkillDetailScreen() {
+export default function DetailScreen() {
   const { skillId, userId, isMyProduct } = useLocalSearchParams<{ 
     skillId: string; 
     userId?: string;
@@ -38,7 +38,7 @@ export default function SkillDetailScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ErrorBoundary>
-        <SkillDetailPage 
+        <DetailPage 
           skillId={skillId} 
           userId={userId || ''} 
           isMyProduct={isMyProduct === 'true'}

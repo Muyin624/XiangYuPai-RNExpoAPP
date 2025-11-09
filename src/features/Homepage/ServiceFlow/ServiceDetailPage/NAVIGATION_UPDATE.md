@@ -129,12 +129,12 @@ skills: [
 | `userId` | string | 用户ID | `user_1` |
 | `serviceType` | string | 服务类型 | `honor_of_kings` |
 
-## 🎨 技能详情页接收参数
+## 🎨 详情页接收参数
 
-技能详情页路由文件：`app/skill/[skillId].tsx`
+详情页路由文件：`app/skill/[skillId].tsx`
 
 ```typescript
-export default function SkillDetailScreen() {
+export default function DetailScreen() {
   const { skillId, userId, isMyProduct } = useLocalSearchParams<{ 
     skillId: string; 
     userId?: string;
@@ -142,7 +142,7 @@ export default function SkillDetailScreen() {
   }>();
   
   return (
-    <SkillDetailPage 
+    <DetailPage 
       skillId={skillId} 
       userId={userId || ''} 
       isMyProduct={isMyProduct === 'true'}
@@ -305,7 +305,7 @@ try {
 
 ## 🔗 相关文档
 
-- [技能详情页文档](../../Profile/OtherUserProfilePage/SkillDetailPage/README.md)
+- [详情页文档](../../Profile/OtherUserProfilePage/README.md)
 - [路由配置文档](../../../../app/skill/README.md)
 - [用户数据模型](../../../../stores/userStore.ts)
 

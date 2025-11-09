@@ -217,11 +217,11 @@ const MyPostsPage = () => {
     }
   };
 
-  // 点击卡片 - 跳转到技能详情页
+  // 点击卡片 - 跳转到详情页
   const handleCardPress = (item: ContentListVO) => {
-    console.log('🧭 导航: 我的发布 → 技能详情页（我的产品）', item.id);
-    // 跳转到技能详情页，传递技能ID和用户ID
-    // 技能详情页会识别这是"我的产品"，显示管理按钮而不是下单按钮
+    console.log('🧭 导航: 我的发布 → 详情页（我的产品）', item.id);
+    // 跳转到详情页，传递技能ID和用户ID
+    // 详情页会识别这是"我的产品"，显示管理按钮而不是下单按钮
     router.push(`/skill/${item.id}?userId=${item.userId}&isMyProduct=true`);
   };
 

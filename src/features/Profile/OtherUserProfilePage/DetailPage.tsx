@@ -1,9 +1,9 @@
 // #region 1. File Banner & TOC
 /**
- * SkillDetailPage - 技能详情页
+ * DetailPage - 详情页
  * 
  * 功能：
- * - 显示技能详细信息
+ * - 显示详细信息（技能/服务/组局等）
  * - 用户信息展示
  * - 评价列表
  * - 底部私信和下单按钮
@@ -27,7 +27,7 @@ import {
 // #endregion
 
 // #region 3. Types
-interface SkillDetailPageProps {
+interface DetailPageProps {
   skillId: string;
   userId: string;
   isMyProduct?: boolean;  // 是否是我的产品
@@ -73,9 +73,9 @@ const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
 };
 
 /**
- * 技能详情页主组件
+ * 详情页主组件
  */
-const SkillDetailPage: React.FC<SkillDetailPageProps> = ({ skillId, userId, isMyProduct = false }) => {
+const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = false }) => {
   const router = useRouter();
 
   // 模拟数据
@@ -554,6 +554,6 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SkillDetailPage;
+export default DetailPage;
 // #endregion
 

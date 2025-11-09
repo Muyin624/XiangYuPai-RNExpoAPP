@@ -2,7 +2,8 @@
 /**
  * OtherUserProfilePage - Other User's Profile Page
  * 
- * 对方用户主页页面（完整页面，非模态框）
+ * 个人主页页面（完整页面，非模态框）
+ * 用于查看其他用户的个人主页
  * 
  * Features:
  * - 完整的页面布局
