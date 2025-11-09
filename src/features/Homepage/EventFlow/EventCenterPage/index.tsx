@@ -105,8 +105,8 @@ const useEventCenterLogic = () => {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   
   const handleEventPress = useCallback((eventId: string) => {
-    // Navigate to skill detail page
-    router.push(`/skill/${eventId}`);
+    // Navigate to skill detail page with event contentType
+    router.push(`/skill/${eventId}?contentType=event`);
   }, [router]);
   
   const handlePublish = useCallback(() => {

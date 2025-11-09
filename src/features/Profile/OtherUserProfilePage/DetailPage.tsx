@@ -31,6 +31,7 @@ interface DetailPageProps {
   skillId: string;
   userId: string;
   isMyProduct?: boolean;  // 是否是我的产品
+  contentType?: 'service' | 'event';  // 内容类型：服务或组局活动
 }
 
 interface Review {
@@ -75,8 +76,11 @@ const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
 /**
  * 详情页主组件
  */
-const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = false }) => {
+const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = false, contentType = 'service' }) => {
   const router = useRouter();
+
+  // 判断是否为组局活动
+  const isEvent = contentType === 'event';
 
   // 模拟数据
   const skillData = {
@@ -88,13 +92,17 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
     gender: 2,
     distance: '3.2km',
     price: 10,
-    unit: '局',
+    unit: isEvent ? '人' : '局',
     tags: ['实名认证', '大神', '微信区', '荣耀王者', '巅峰1800+'],
     description: '主打鲜其他位置都能补 能c技术方式战韩信 这里是技能介绍这里是技能介绍这里是技能介绍',
     rating: 99,
     reviewCount: 100,
     reviewTags: ['带妹上分', '声音好听'],
     availableTime: 'I小时30分钟后可接单',
+    // 组局活动特有字段
+    currentCount: 12,  // 当前报名人数
+    maxCount: 16,      // 最大报名人数
+    startTime: '6月10日18:00',  // 活动开始时间
   };
 
   const reviews: Review[] = [
@@ -126,9 +134,15 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
   };
 
   const handleOrder = () => {
-    console.log('下单');
-    // 跳转到订单页面
-    router.push(`/order/create?skillId=${skillId}&userId=${userId}` as any);
+    if (isEvent) {
+      console.log('报名组局');
+      // TODO: 跳转到报名页面或显示报名确认弹窗
+      // router.push(`/event/signup?eventId=${skillId}` as any);
+    } else {
+      console.log('下单');
+      // 跳转到订单页面
+      router.push(`/order/create?skillId=${skillId}&userId=${userId}` as any);
+    }
   };
 
   // 处理管理（编辑）
@@ -186,6 +200,42 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
           </View>
         </View>
 
+        {/* 组局活动报名信息 */}
+        {isEvent && (
+          <View style={styles.eventInfoCard}>
+            <View style={styles.eventInfoRow}>
+              <View style={styles.eventInfoItem}>
+                <Text style={styles.eventInfoIcon}>👥</Text>
+                <Text style={styles.eventInfoLabel}>报名人数</Text>
+                <Text style={styles.eventInfoValue}>
+                  {skillData.currentCount}/{skillData.maxCount}人
+                </Text>
+              </View>
+              
+              <View style={styles.eventInfoDivider} />
+              
+              <View style={styles.eventInfoItem}>
+                <Text style={styles.eventInfoIcon}>🕐</Text>
+                <Text style={styles.eventInfoLabel}>活动时间</Text>
+                <Text style={styles.eventInfoValue}>{skillData.startTime}</Text>
+              </View>
+            </View>
+            
+            {/* 报名进度条 */}
+            <View style={styles.progressBarContainer}>
+              <View 
+                style={[
+                  styles.progressBar, 
+                  { width: `${(skillData.currentCount / skillData.maxCount) * 100}%` }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>
+              还差 {skillData.maxCount - skillData.currentCount} 人满员
+            </Text>
+          </View>
+        )}
+
         {/* 评价区域 */}
         <View style={styles.reviewSection}>
           <View style={styles.reviewHeader}>
@@ -238,7 +288,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
             </TouchableOpacity>
           </>
         ) : (
-          // 他人产品：显示私信和下单按钮
+          // 他人产品：显示私信和下单/报名按钮
           <>
             <TouchableOpacity style={styles.messageButton} onPress={handleMessage}>
               <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
@@ -246,8 +296,8 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.orderButton} onPress={handleOrder}>
-              <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.orderButtonText}>下单</Text>
+              <Ionicons name={isEvent ? "person-add-outline" : "cart-outline"} size={20} color="#FFFFFF" />
+              <Text style={styles.orderButtonText}>{isEvent ? '报名' : '下单'}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -372,6 +422,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999999',
     marginTop: 2,
+  },
+  
+  // 组局活动信息卡片
+  eventInfoCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    marginBottom: 12,
+  },
+  eventInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  eventInfoItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  eventInfoIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  eventInfoLabel: {
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 4,
+  },
+  eventInfoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  eventInfoDivider: {
+    width: 1,
+    backgroundColor: '#E5E5E5',
+    marginHorizontal: 16,
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#8B5CF6',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 13,
+    color: '#8B5CF6',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   
   // 评价区域

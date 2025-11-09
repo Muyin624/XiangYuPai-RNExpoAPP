@@ -18,8 +18,9 @@
 
 // #region 2. Imports
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+    Animated,
     Keyboard,
     SafeAreaView,
     StatusBar,
@@ -55,13 +56,22 @@ interface LocalSearchState {
 
 // #region 4. Constants & Config
 const COLORS = {
-  BACKGROUND: '#FFFFFF',
+  BACKGROUND: '#F8F9FE',
   PRIMARY: '#6366F1',
+  PRIMARY_LIGHT: '#818CF8',
+  PRIMARY_DARK: '#4F46E5',
+  SECONDARY: '#EC4899',
   TEXT: '#1F2937',
   TEXT_SECONDARY: '#6B7280',
   TEXT_LIGHT: '#9CA3AF',
   BORDER: '#E5E7EB',
-  SURFACE: '#F8FAFC',
+  SURFACE: '#FFFFFF',
+  CARD_BG: '#FFFFFF',
+  GRADIENT_START: '#6366F1',
+  GRADIENT_END: '#8B5CF6',
+  SHADOW: 'rgba(99, 102, 241, 0.1)',
+  HOT_TAG: '#FF6B6B',
+  TREND_UP: '#FF6B6B',
 };
 
 const DEBOUNCE_DELAY = 300;
@@ -222,7 +232,14 @@ const useSearchLogic = (initialQuery?: string) => {
    */
   const handleResultPress = useCallback((resultId: string, resultType: string) => {
     if (resultType === 'user') {
-      router.push({ pathname: '/modal/user-detail' as any, params: { userId: resultId } });
+      // 跳转到他人详情页
+      router.push({ pathname: '/profile/[userId]' as any, params: { userId: resultId } });
+    } else if (resultType === 'order' || resultType === 'service') {
+      // 跳转到技能详情页（服务详情）
+      router.push({ pathname: '/skill/[skillId]' as any, params: { skillId: resultId } });
+    } else if (resultType === 'topic') {
+      // 跳转到话题详情页
+      router.push({ pathname: '/topic/[topicId]' as any, params: { topicId: resultId } });
     }
   }, [router]);
   
@@ -277,7 +294,7 @@ const SearchNavigationArea: React.FC<{
 );
 
 /**
- * 搜索历史区域
+ * 搜索历史区域 - 带动画
  */
 const SearchHistoryArea: React.FC<{
   historyItems: SearchHistoryItem[];
@@ -285,14 +302,26 @@ const SearchHistoryArea: React.FC<{
   onHistoryDelete: (id: string) => void;
   onClearAll: () => void;
 }> = ({ historyItems, onHistorySelect, onHistoryDelete, onClearAll }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    if (historyItems.length > 0) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [historyItems.length]);
+  
   if (historyItems.length === 0) return null;
   
   return (
-    <View style={styles.historyArea}>
+    <Animated.View style={[styles.historyArea, { opacity: fadeAnim }]}>
       <View style={styles.historyHeader}>
-        <Text style={styles.historyTitle}>搜索历史</Text>
-        <TouchableOpacity onPress={onClearAll}>
-          <Text style={styles.clearAllText}>清空</Text>
+        <Text style={styles.historyTitle}>🕐 搜索历史</Text>
+        <TouchableOpacity onPress={onClearAll} style={styles.clearAllButton}>
+          <Text style={styles.clearAllText}>🗑️ 清空</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.historyTags}>
@@ -302,38 +331,61 @@ const SearchHistoryArea: React.FC<{
             style={styles.historyTag}
             onPress={() => onHistorySelect(item.query)}
             onLongPress={() => onHistoryDelete(item.id)}
+            activeOpacity={0.7}
           >
             <Text style={styles.historyTagText}>{item.query}</Text>
+            <Text style={styles.historyTagClose}>×</Text>
           </TouchableOpacity>
         ))}
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 /**
- * 热门搜索区域
+ * 热门搜索区域 - 带动画
  */
 const HotSearchArea: React.FC<{
   hotSearches: HotSearchItem[];
   onHotSearchSelect: (query: string) => void;
-}> = ({ hotSearches, onHotSearchSelect }) => (
-  <View style={styles.hotSearchArea}>
-    <Text style={styles.hotSearchTitle}>热门搜索</Text>
-    <View style={styles.hotSearchTags}>
-      {hotSearches.map(item => (
-        <TouchableOpacity
-          key={item.id}
-          style={styles.hotSearchTag}
-          onPress={() => onHotSearchSelect(item.query)}
-        >
-          <Text style={styles.hotSearchText}>{item.query}</Text>
-          {item.trend === 'up' && <Text style={styles.trendIcon}>🔥</Text>}
-        </TouchableOpacity>
-      ))}
-    </View>
-  </View>
-);
+}> = ({ hotSearches, onHotSearchSelect }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+  
+  return (
+    <Animated.View style={[styles.hotSearchArea, { opacity: fadeAnim }]}>
+      <View style={styles.hotSearchTitleRow}>
+        <Text style={styles.hotSearchTitle}>🔥 热门搜索</Text>
+        <Text style={styles.hotSearchSubtitle}>大家都在搜</Text>
+      </View>
+      <View style={styles.hotSearchTags}>
+        {hotSearches.map((item, index) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[styles.hotSearchTag, index < 3 && styles.hotSearchTagTop]}
+            onPress={() => onHotSearchSelect(item.query)}
+            activeOpacity={0.7}
+          >
+            {index < 3 && (
+              <View style={[styles.rankBadge, { backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }]}>
+                <Text style={styles.rankText}>{index + 1}</Text>
+              </View>
+            )}
+            <Text style={[styles.hotSearchText, index < 3 && styles.hotSearchTextTop]}>{item.query}</Text>
+            {item.trend === 'up' && <Text style={styles.trendIcon}>🔥</Text>}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </Animated.View>
+  );
+};
 
 /**
  * SearchMainPage 主组件
@@ -413,118 +465,215 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: COLORS.BACKGROUND,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    paddingVertical: 12,
+    backgroundColor: COLORS.SURFACE,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: COLORS.BACKGROUND,
+    marginRight: 8,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: 20,
     color: COLORS.TEXT,
+    fontWeight: '600',
   },
   searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.SURFACE,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    height: 40,
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    height: 48,
+    borderWidth: 2,
+    borderColor: COLORS.PRIMARY_LIGHT,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
+    fontSize: 18,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: COLORS.TEXT,
     padding: 0,
+    fontWeight: '500',
   },
   clearButton: {
-    fontSize: 16,
+    fontSize: 18,
     color: COLORS.TEXT_LIGHT,
-    padding: 4,
+    padding: 6,
+    fontWeight: '600',
   },
   
   // 空状态内容
   emptyStateContent: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   
   // 历史区域
   historyArea: {
-    marginBottom: 24,
+    marginBottom: 32,
+    backgroundColor: COLORS.CARD_BG,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   historyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   historyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: COLORS.TEXT,
+    letterSpacing: 0.3,
+  },
+  clearAllButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: COLORS.BACKGROUND,
   },
   clearAllText: {
-    fontSize: 14,
-    color: COLORS.TEXT_SECONDARY,
+    fontSize: 13,
+    color: COLORS.PRIMARY,
+    fontWeight: '600',
   },
   historyTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
   },
   historyTag: {
-    backgroundColor: COLORS.SURFACE,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
     marginRight: 8,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   historyTagText: {
     fontSize: 14,
     color: COLORS.TEXT,
+    fontWeight: '500',
+    marginRight: 6,
+  },
+  historyTagClose: {
+    fontSize: 16,
+    color: COLORS.TEXT_LIGHT,
+    fontWeight: '600',
   },
   
   // 热门搜索区域
   hotSearchArea: {
     marginBottom: 24,
+    backgroundColor: COLORS.CARD_BG,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: COLORS.SHADOW,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  hotSearchTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   hotSearchTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: COLORS.TEXT,
-    marginBottom: 12,
+    letterSpacing: 0.3,
+  },
+  hotSearchSubtitle: {
+    fontSize: 12,
+    color: COLORS.TEXT_LIGHT,
+    fontWeight: '500',
   },
   hotSearchTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
   },
   hotSearchTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.SURFACE,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: COLORS.BACKGROUND,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
     marginRight: 8,
     marginBottom: 8,
+    borderWidth: 1.5,
+    borderColor: COLORS.PRIMARY_LIGHT,
+    shadowColor: COLORS.PRIMARY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  hotSearchTagTop: {
+    backgroundColor: COLORS.PRIMARY_LIGHT,
+    borderColor: COLORS.PRIMARY,
   },
   hotSearchText: {
     fontSize: 14,
-    color: COLORS.TEXT,
+    color: COLORS.PRIMARY,
+    fontWeight: '600',
+  },
+  hotSearchTextTop: {
+    color: COLORS.WHITE,
+  },
+  rankBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
+  },
+  rankText: {
+    fontSize: 11,
+    color: COLORS.WHITE,
+    fontWeight: '700',
   },
   trendIcon: {
-    fontSize: 12,
+    fontSize: 14,
     marginLeft: 4,
   },
   
@@ -534,10 +683,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   placeholderText: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.TEXT_SECONDARY,
     textAlign: 'center',
-    paddingTop: 40,
+    paddingTop: 60,
+    fontWeight: '500',
   },
 });
 
