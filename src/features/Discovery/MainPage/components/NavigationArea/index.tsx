@@ -96,7 +96,7 @@ const useNavigationLogic = (props: NavigationAreaProps) => {
   }, [activeTab, onTabChange]);
   
   /**
-   * 搜索按钮点击
+   * 相机按钮点击 - 发布动态
    */
   const handleSearchButtonPress = useCallback(() => {
     onSearchPress();

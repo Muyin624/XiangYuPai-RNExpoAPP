@@ -16,6 +16,8 @@ import type { AuthMode, UserInfo } from '../LoginMainPage/types';
 // =========================================
 // 🆕 导入凭证存储
 import { clearCredentials } from '../utils/credentialStorage';
+// 🆕 导入测试账号配置
+import { getTestAccountUserInfo, isTestAccount, verifyTestAccount, verifyTestAccountSmsCode } from '../config/testAccounts';
 
 // #region 类型定义
 
@@ -44,6 +46,23 @@ export interface AuthActions {
 export type AuthStore = AuthState & AuthActions;
 
 // #endregion
+
+// 统一将登录失败错误信息规范化为正式版文案
+const toProdLoginError = (raw?: unknown): string => {
+  const msg = typeof raw === 'string' ? raw : (raw as any)?.message || '';
+  if (!msg) return '登录失败，请稍后重试';
+  const lower = msg.toLowerCase();
+  if (msg.includes('测试') || msg.includes('不是测试账号') || lower.includes('test')) {
+    return '账号或密码错误，请重试';
+  }
+  if (msg.includes('验证码')) {
+    return '验证码错误或已过期，请重试';
+  }
+  if (msg.includes('密码')) {
+    return '账号或密码错误，请重试';
+  }
+  return msg;
+};
 
 // #region 工具函数
 
@@ -197,6 +216,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         throw new Error('请输入手机号');
       }
       
+      // 🔐 检查是否为测试账号
+      const isTestAcc = isTestAccount(credentials.phone);
+      console.log(`   📋 账号类型: ${isTestAcc ? '✅ 测试账号' : '❌ 非测试账号'}`);
+      
+      // 🔒 只允许测试账号登录
+      if (!isTestAcc) {
+        console.log('   ❌ 拒绝登录：该手机号不是测试账号');
+        console.log('   💡 提示：请使用以下测试账号之一：');
+        console.log('      - 13800138000 (密码: test123456, 验证码: 888888)');
+        console.log('      - 13800138001 (密码: test123456, 验证码: 666666)');
+        console.log('      - 13800138002 (密码: test123456, 验证码: 123456)');
+        throw new Error('该手机号不是测试账号，请使用正确的测试账号登录');
+      }
+      
       if (credentials?.password) {
         // 密码登录
         console.log('   步骤2: 验证密码格式');
@@ -204,8 +237,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           throw new Error('密码长度至少6位');
         }
         
-        // 模拟密码验证（任何密码都通过）
-        console.log('   步骤3: 密码验证通过（模拟）');
+        // 🔐 验证测试账号密码
+        console.log('   步骤3: 验证测试账号密码');
+        if (!verifyTestAccount(credentials.phone, credentials.password)) {
+          throw new Error('密码错误，请检查后重试');
+        }
+        console.log('   ✅ 测试账号密码验证通过');
       } else if (credentials?.smsCode || credentials?.code) {
         // 验证码登录
         const code = credentials.smsCode || credentials.code;
@@ -214,8 +251,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           throw new Error('验证码格式不正确');
         }
         
-        // 模拟验证码验证（任何验证码都通过）
-        console.log('   步骤3: 验证码验证通过（模拟）');
+        // 🔐 验证测试账号验证码
+        console.log('   步骤3: 验证测试账号验证码');
+        if (!verifyTestAccountSmsCode(credentials.phone, code)) {
+          throw new Error('验证码错误，请检查后重试');
+        }
+        console.log('   ✅ 测试账号验证码验证通过');
       } else {
         throw new Error('请提供密码或验证码');
       }
@@ -226,14 +267,26 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const refreshToken = `mock_refresh_token_${timestamp}`;
       const expiresIn = 3600; // 1小时
       
-      const adaptedUserInfo: UserInfo = {
-        id: `mock_user_${timestamp}`,
-        phone: credentials.phone || '',
-        nickname: `测试用户_${credentials.phone?.slice(-4) || '0000'}`,
-        avatar: 'https://via.placeholder.com/150',
-        verified: true,
-        createdAt: new Date().toISOString(),
-      };
+      // 🔐 如果是测试账号，使用真实的用户信息
+      let adaptedUserInfo: UserInfo;
+      if (isTestAcc) {
+        const testUserInfo = getTestAccountUserInfo(credentials.phone);
+        if (!testUserInfo) {
+          throw new Error('获取测试账号信息失败');
+        }
+        adaptedUserInfo = testUserInfo;
+        console.log(`   ✅ 使用测试账号信息: ${testUserInfo.nickname}`);
+      } else {
+        // 普通账号使用假数据
+        adaptedUserInfo = {
+          id: `mock_user_${timestamp}`,
+          phone: credentials.phone || '',
+          nickname: `测试用户_${credentials.phone?.slice(-4) || '0000'}`,
+          avatar: 'https://via.placeholder.com/150',
+          verified: true,
+          createdAt: new Date().toISOString(),
+        };
+      }
       // =========================================
       
       console.log('   步骤4: 保存token到SecureStore');
@@ -261,7 +314,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       console.error('❌ 登录失败！');
       console.error('   错误:', error.message || error);
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      throw error;
+      throw new Error(toProdLoginError(error?.message));
     }
   },
   

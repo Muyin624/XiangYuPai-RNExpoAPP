@@ -310,11 +310,11 @@ const useMainPageLogic = (props: MainPageProps) => {
   }, [activeTab, loadMoreFeeds]);
   
   /**
-   * 相机按钮点击 - 进入发布页
+   * 相机按钮点击 - 进入发布动态页
    */
   const handleSearchPress = useCallback(() => {
-    console.log('进入发布页');
-    router.push('/publish' as any);
+    console.log('进入发布动态页');
+    router.push('/publish-post' as any);
   }, [router]);
   
   /**

@@ -4,7 +4,7 @@
  * Route: /order/create
  * 
  * Features:
- * - 显示技能信息
+ * - 显示技能信�?
  * - 选择购买数量
  * - 预约时间
  * - 立即支付
@@ -12,15 +12,18 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function OrderCreateScreen() {
@@ -28,20 +31,24 @@ export default function OrderCreateScreen() {
   const { skillId, userId } = useLocalSearchParams<{ skillId: string; userId?: string }>();
   
   const [quantity, setQuantity] = useState(1);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payPwd, setPayPwd] = useState('');
+  const [paying, setPaying] = useState(false);
   
   // 模拟数据
   const orderData = {
     coverImage: 'https://picsum.photos/100',
     userName: '昵称123',
     gender: 2,
-    tags: ['实名认证', '大神', '微信区', '荣耀王者', '巅峰1800+'],
+    tags: ['实名认证', '大神', '微信', '荣耀王者', '巅峰1800+'],
     skillName: '王者荣耀',
     price: 10,
     unit: '局',
-    availableTime: '1小时30分钟后',
+    availableTime: '1小时30分钟',
   };
   
   const totalPrice = orderData.price * quantity;
+  const canSubmit = useMemo(() => quantity > 0 && !paying, [quantity, paying]);
   
   const handleBack = () => {
     router.back();
@@ -59,7 +66,28 @@ export default function OrderCreateScreen() {
   
   const handlePay = () => {
     console.log('立即支付', { skillId, quantity, totalPrice });
-    // TODO: 跳转到支付页面
+    setShowPayModal(true);
+  };
+
+  const handleConfirmPay = async () => {
+    if (payPwd.length !== 6) {
+      Alert.alert('提示', '请输?位支付密?');
+      return;
+    }
+    setPaying(true);
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      if (payPwd === '666666') {
+        setShowPayModal(false);
+        setPayPwd('');
+        const orderId = `ORD${Date.now()}`;
+        router.replace({ pathname: '/profile/order-detail', params: { orderId } });
+      } else {
+        Alert.alert('支付失败', '支付密码错误，请重试');
+      }
+    } finally {
+      setPaying(false);
+    }
   };
 
   return (
@@ -84,7 +112,7 @@ export default function OrderCreateScreen() {
               <View style={styles.userNameRow}>
                 <Text style={styles.userName}>{orderData.userName}</Text>
                 <Text style={[styles.genderIcon, orderData.gender === 1 ? styles.male : styles.female]}>
-                  {orderData.gender === 1 ? '♂' : '♀'}
+                  {orderData.gender === 1 ? '女' : '男'}
                 </Text>
               </View>
               
@@ -148,7 +176,7 @@ export default function OrderCreateScreen() {
 
           {/* 总计 */}
           <View style={styles.totalSection}>
-            <Text style={styles.totalLabel}>共计：</Text>
+            <Text style={styles.totalLabel}>共计</Text>
             <Text style={styles.totalPrice}>{totalPrice}</Text>
             <Text style={styles.totalUnit}>金币</Text>
           </View>
@@ -156,10 +184,39 @@ export default function OrderCreateScreen() {
 
         {/* 底部支付按钮 */}
         <View style={styles.bottomButton}>
-          <TouchableOpacity style={styles.payButton} onPress={handlePay}>
+          <TouchableOpacity style={[styles.payButton, !canSubmit && styles.buttonDisabled]} onPress={handlePay} disabled={!canSubmit}>
             <Text style={styles.payButtonText}>立即支付</Text>
           </TouchableOpacity>
         </View>
+
+        {/* 支付密码弹窗 */}
+        <Modal visible={showPayModal} transparent animationType="fade" onRequestClose={() => setShowPayModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>请输入支付密码?</Text>
+              <Text style={styles.modalSubtitle}>用于确认本次支付</Text>
+              <TextInput
+                style={styles.pwdInput}
+                placeholder="******"
+                placeholderTextColor="#BDBDBD"
+                secureTextEntry
+                keyboardType="number-pad"
+                maxLength={6}
+                value={payPwd}
+                onChangeText={setPayPwd}
+                autoFocus
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => { setShowPayModal(false); setPayPwd(''); }} disabled={paying}>
+                  <Text style={styles.modalCancelText}>取消</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalBtn, styles.modalConfirm]} onPress={handleConfirmPay} disabled={paying}>
+                  <Text style={styles.modalConfirmText}>{paying ? '处理�?..' : '确认支付'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </>
   );
@@ -339,6 +396,76 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 14,
+  },
+  pwdInput: {
+    height: 46,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    fontSize: 18,
+    letterSpacing: 8,
+    textAlign: 'center',
+    color: '#111',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCancel: {
+    backgroundColor: '#F5F5F5',
+  },
+  modalCancelText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  modalConfirm: {
+    backgroundColor: '#8B5CF6',
+  },
+  modalConfirmText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

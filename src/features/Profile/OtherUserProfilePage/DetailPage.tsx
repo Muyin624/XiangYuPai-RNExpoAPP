@@ -3,7 +3,7 @@
  * DetailPage - 详情页
  * 
  * 功能：
- * - 显示详细信息（技能/服务/组局等）
+ * - 显示详细信息（技能、服务、组局等）
  * - 用户信息展示
  * - 评价列表
  * - 底部私信和下单按钮
@@ -13,17 +13,8 @@
 // #region 2. Imports
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import {
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Image, Modal, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // #endregion
 
 // #region 3. Types
@@ -53,7 +44,7 @@ const ReviewCard: React.FC<{ review: Review }> = ({ review }) => {
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, index) => (
       <Text key={index} style={styles.star}>
-        {index < rating ? '⭐' : '☆'}
+        {index < rating ? '★' : '☆'}
       </Text>
     ));
   };
@@ -82,6 +73,11 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
   // 判断是否为组局活动
   const isEvent = contentType === 'event';
 
+  // 支付相关状态
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payPwd, setPayPwd] = useState('');
+  const [paying, setPaying] = useState(false);
+
   // 模拟数据
   const skillData = {
     coverImage: 'https://picsum.photos/400/200',
@@ -92,8 +88,8 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
     gender: 2,
     distance: '3.2km',
     price: 10,
-    unit: isEvent ? '人' : '局',
-    tags: ['实名认证', '大神', '微信区', '荣耀王者', '巅峰1800+'],
+    unit: isEvent ? '局' : '次',
+    tags: ['实名认证', '大神', '微信', '荣耀王者', '巅峰1800+'],
     description: '主打鲜其他位置都能补 能c技术方式战韩信 这里是技能介绍这里是技能介绍这里是技能介绍',
     rating: 99,
     reviewCount: 100,
@@ -102,7 +98,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
     // 组局活动特有字段
     currentCount: 12,  // 当前报名人数
     maxCount: 16,      // 最大报名人数
-    startTime: '6月10日18:00',  // 活动开始时间
+    startTime: '6:00:00',  // 活动开始时间
   };
 
   const reviews: Review[] = [
@@ -112,7 +108,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
       avatar: 'https://picsum.photos/40',
       rating: 4,
       date: '2025-14-49',
-      content: '非常好 声音也很好听 人超级有耐心 soo全场接稳地 让人很安心 技术超级好',
+      content: '非常好评 声音也很好听 人超级有耐心 soo全场接稳 让人很安心 技术超级好',
     },
     {
       id: '2',
@@ -120,9 +116,13 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
       avatar: 'https://picsum.photos/40',
       rating: 5,
       date: '2025-14-49',
-      content: '非常好 声音也很好听 人超级有耐心 soo全场接稳地 让人很安心 技术超级好',
+      content: '非常好评 声音也很好听 人超级有耐心 soo全场接稳 让人很安心 技术超级好',
     },
   ];
+
+  const handleViewAllReviews = () => {
+    router.push({ pathname: '/skill/[skillId]/reviews', params: { skillId } });
+  };
 
   const handleBack = () => {
     router.back();
@@ -130,18 +130,50 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
 
   const handleMessage = () => {
     console.log('发送私信');
-    // TODO: 跳转到私信页面
+    // TODO: 跳转到私信页
   };
 
   const handleOrder = () => {
     if (isEvent) {
       console.log('报名组局');
-      // TODO: 跳转到报名页面或显示报名确认弹窗
-      // router.push(`/event/signup?eventId=${skillId}` as any);
+      // 组局活动：直接弹出支付密码弹窗
+      setShowPayModal(true);
     } else {
       console.log('下单');
-      // 跳转到订单页面
+      // 服务：跳转到订单页
       router.push(`/order/create?skillId=${skillId}&userId=${userId}` as any);
+    }
+  };
+
+  const handleConfirmPay = async () => {
+    if (payPwd.length !== 6) {
+      Alert.alert('提示', '请输入6位支付密码');
+      return;
+    }
+    setPaying(true);
+    try {
+      // 模拟支付请求
+      await new Promise((r) => setTimeout(r, 500));
+      if (payPwd === '666666') {
+        setShowPayModal(false);
+        setPayPwd('');
+        // 支付成功后跳转到报名详情页
+        const signupId = `SIGNUP${Date.now()}`;
+        Alert.alert('报名成功', '您已成功报名该活动！', [
+          {
+            text: '查看详情',
+            onPress: () => router.push({ pathname: '/profile/signup-detail', params: { signupId } }),
+          },
+          {
+            text: '确定',
+            style: 'cancel',
+          },
+        ]);
+      } else {
+        Alert.alert('支付失败', '支付密码错误，请重试');
+      }
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -165,7 +197,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* 封面图 */}
+        {/* 封面*/}
         <Image source={{ uri: skillData.coverImage }} style={styles.coverImage} />
 
         {/* 用户信息卡片 */}
@@ -176,7 +208,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
             <View style={styles.userNameRow}>
               <Text style={styles.userName}>{skillData.userName}</Text>
               <Text style={[styles.genderIcon, skillData.gender === 1 ? styles.male : styles.female]}>
-                {skillData.gender === 1 ? '♂' : '♀'}
+                {skillData.gender === 1 ? '女' : '男'}
               </Text>
               <Text style={styles.distance}>{skillData.distance}</Text>
             </View>
@@ -208,7 +240,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
                 <Text style={styles.eventInfoIcon}>👥</Text>
                 <Text style={styles.eventInfoLabel}>报名人数</Text>
                 <Text style={styles.eventInfoValue}>
-                  {skillData.currentCount}/{skillData.maxCount}人
+                  {skillData.currentCount}/{skillData.maxCount}
                 </Text>
               </View>
               
@@ -221,7 +253,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
               </View>
             </View>
             
-            {/* 报名进度条 */}
+            {/* 报名进度*/}
             <View style={styles.progressBarContainer}>
               <View 
                 style={[
@@ -231,7 +263,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
               />
             </View>
             <Text style={styles.progressText}>
-              还差 {skillData.maxCount - skillData.currentCount} 人满员
+              还差 {skillData.maxCount - skillData.currentCount} 人满额
             </Text>
           </View>
         )}
@@ -245,7 +277,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
             <View style={styles.ratingBadge}>
               <Text style={styles.ratingText}>好评率{skillData.rating}%</Text>
             </View>
-            <TouchableOpacity style={styles.viewAllButton}>
+            <TouchableOpacity style={styles.viewAllButton} onPress={handleViewAllReviews}>
               <Text style={styles.viewAllText}>查看全部</Text>
               <Ionicons name="chevron-forward" size={16} color="#999999" />
             </TouchableOpacity>
@@ -265,7 +297,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
             <ReviewCard key={review.id} review={review} />
           ))}
 
-          {/* 可预约时间 */}
+          {/* 可预约时�?*/}
           <View style={styles.availableTimeContainer}>
             <Text style={styles.availableTimeText}>{skillData.availableTime}</Text>
           </View>
@@ -302,6 +334,50 @@ const DetailPage: React.FC<DetailPageProps> = ({ skillId, userId, isMyProduct = 
           </>
         )}
       </View>
+
+      {/* 支付密码弹窗 */}
+      <Modal visible={showPayModal} transparent animationType="fade" onRequestClose={() => setShowPayModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>请输入支付密码</Text>
+            <Text style={styles.modalSubtitle}>
+              支付 {skillData.price} 金币报名活动
+            </Text>
+            <TextInput
+              style={styles.pwdInput}
+              placeholder="******"
+              placeholderTextColor="#BDBDBD"
+              secureTextEntry
+              keyboardType="number-pad"
+              maxLength={6}
+              value={payPwd}
+              onChangeText={setPayPwd}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={[styles.modalBtn, styles.modalCancel]} 
+                onPress={() => { 
+                  setShowPayModal(false); 
+                  setPayPwd(''); 
+                }} 
+                disabled={paying}
+              >
+                <Text style={styles.modalCancelText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalBtn, styles.modalConfirm]} 
+                onPress={handleConfirmPay} 
+                disabled={paying}
+              >
+                <Text style={styles.modalConfirmText}>
+                  {paying ? '处理中...' : '确认支付'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -536,11 +612,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  reviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
   reviewAvatar: {
     width: 40,
     height: 40,
@@ -654,6 +725,73 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  // 支付弹窗样式
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 14,
+  },
+  pwdInput: {
+    height: 46,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    fontSize: 18,
+    letterSpacing: 8,
+    textAlign: 'center',
+    color: '#111',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCancel: {
+    backgroundColor: '#F5F5F5',
+  },
+  modalCancelText: {
+    color: '#333',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  modalConfirm: {
+    backgroundColor: '#8B5CF6',
+  },
+  modalConfirmText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
