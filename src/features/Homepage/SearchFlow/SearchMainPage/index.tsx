@@ -40,6 +40,10 @@ import { ErrorBoundary, LoadingOverlay } from '../../../../components';
 // 搜索结果页面
 import SearchResultsPage from '../SearchResultsPage';
 
+// API服务
+import { searchApiService } from '../api';
+import type { HotKeyword, SearchHistoryItem as ApiSearchHistoryItem, SearchSuggestion as ApiSearchSuggestion } from '../api';
+
 // 类型和常量
 import type { HotSearchItem, SearchCategory, SearchHistoryItem, SearchMainPageProps, SearchResults, SearchSuggestion, SearchViewState } from './types';
 // #endregion
@@ -72,6 +76,7 @@ const COLORS = {
   SHADOW: 'rgba(99, 102, 241, 0.1)',
   HOT_TAG: '#FF6B6B',
   TREND_UP: '#FF6B6B',
+  WHITE: '#FFFFFF',
 };
 
 const DEBOUNCE_DELAY = 300;
@@ -99,8 +104,6 @@ const useDebounce = <T,>(value: T, delay: number): T => {
  * 搜索页面状态管理Hook
  */
 const useSearchState = (initialQuery?: string) => {
-  const { searchUsers, addSearchHistory, search: searchStore } = useUserStore();
-  
   const [localState, setLocalState] = useState<LocalSearchState>({
     query: initialQuery || '',
     viewState: 'empty',
@@ -110,22 +113,85 @@ const useSearchState = (initialQuery?: string) => {
   });
   
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
-  const [hotSearches] = useState<HotSearchItem[]>([
-    { id: '1', query: '王者荣耀', rank: 1, trend: 'up', category: 'game' },
-    { id: '2', query: '英雄联盟', rank: 2, trend: 'stable', category: 'game' },
-    { id: '3', query: '探店', rank: 3, trend: 'up', category: 'lifestyle' },
-    { id: '4', query: 'K歌', rank: 4, trend: 'down', category: 'lifestyle' },
-  ]);
-  
+  const [hotSearches, setHotSearches] = useState<HotSearchItem[]>([]);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
-  const [results, setResults] = useState<SearchResults>({
-    users: { data: [], totalCount: 0, hasMore: false },
-    services: { data: [], totalCount: 0, hasMore: false },
-    content: { data: [], totalCount: 0, hasMore: false },
-    totalResults: 0,
-  });
+  const [placeholder, setPlaceholder] = useState<string>('搜索更多');
   
   const debouncedQuery = useDebounce(localState.query, DEBOUNCE_DELAY);
+  
+  // 初始化搜索数据
+  useEffect(() => {
+    const initSearch = async () => {
+      try {
+        const data = await searchApiService.getSearchInit();
+        
+        // 转换历史记录格式
+        const formattedHistory: SearchHistoryItem[] = data.searchHistory.map((item, index) => ({
+          id: `history-${index}`,
+          query: item.keyword,
+          timestamp: new Date(item.searchTime).getTime(),
+          resultCount: 0,
+          category: 'all' as SearchCategory,
+        }));
+        
+        // 转换热门搜索格式
+        const formattedHotSearches: HotSearchItem[] = data.hotKeywords.map((item, index) => ({
+          id: `hot-${index}`,
+          query: item.keyword,
+          rank: item.rank || index + 1,
+          trend: item.isHot ? 'up' : 'stable',
+          category: 'general',
+        }));
+        
+        setSearchHistory(formattedHistory);
+        setHotSearches(formattedHotSearches);
+        setPlaceholder(data.placeholder);
+      } catch (error) {
+        console.error('Failed to initialize search:', error);
+        // 使用默认数据
+        setHotSearches([
+          { id: '1', query: '王者荣耀', rank: 1, trend: 'up', category: 'game' },
+          { id: '2', query: '英雄联盟', rank: 2, trend: 'stable', category: 'game' },
+          { id: '3', query: '探店', rank: 3, trend: 'up', category: 'lifestyle' },
+          { id: '4', query: 'K歌', rank: 4, trend: 'down', category: 'lifestyle' },
+        ]);
+      }
+    };
+    
+    initSearch();
+  }, []);
+  
+  // 获取搜索建议
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!debouncedQuery || debouncedQuery.length === 0) {
+        setSuggestions([]);
+        return;
+      }
+      
+      try {
+        const data = await searchApiService.getSearchSuggest(debouncedQuery, 10);
+        
+        // 转换建议格式
+        const formattedSuggestions: SearchSuggestion[] = data.suggestions.map((item, index) => ({
+          id: `suggestion-${index}`,
+          text: item.text,
+          highlightText: item.highlight || item.text,
+          category: item.type === 'user' ? 'user' : item.type === 'topic' ? 'service' : 'keyword',
+          icon: item.icon || '🔍',
+          resultCount: 0,
+          priority: index,
+        }));
+        
+        setSuggestions(formattedSuggestions);
+      } catch (error) {
+        console.error('Failed to fetch suggestions:', error);
+        setSuggestions([]);
+      }
+    };
+    
+    fetchSuggestions();
+  }, [debouncedQuery]);
   
   return {
     localState,
@@ -135,12 +201,8 @@ const useSearchState = (initialQuery?: string) => {
     hotSearches,
     suggestions,
     setSuggestions,
-    results,
-    setResults,
     debouncedQuery,
-    searchStore,
-    searchUsers,
-    addSearchHistory,
+    placeholder,
   };
 };
 // #endregion
@@ -163,10 +225,13 @@ const useSearchLogic = (initialQuery?: string) => {
     state.setLocalState(prev => ({ ...prev, loading: true, viewState: 'loading' }));
     
     try {
-      await state.searchUsers(query);
-      
-      // 添加到历史
-      state.addSearchHistory(query);
+      // 调用搜索API
+      await searchApiService.executeSearch({
+        keyword: query,
+        type: 'all',
+        pageNum: 1,
+        pageSize: 20,
+      });
       
       state.setLocalState(prev => ({ ...prev, loading: false, viewState: 'results' }));
     } catch (error) {
@@ -209,15 +274,28 @@ const useSearchLogic = (initialQuery?: string) => {
   /**
    * 删除历史记录
    */
-  const handleHistoryDelete = useCallback((id: string) => {
-    state.setSearchHistory(prev => prev.filter(item => item.id !== id));
+  const handleHistoryDelete = useCallback(async (id: string) => {
+    const item = state.searchHistory.find(h => h.id === id);
+    if (!item) return;
+    
+    try {
+      await searchApiService.deleteSearchHistory({ keyword: item.query });
+      state.setSearchHistory(prev => prev.filter(h => h.id !== id));
+    } catch (error) {
+      console.error('Failed to delete history:', error);
+    }
   }, [state]);
   
   /**
    * 清空所有历史
    */
-  const handleClearHistory = useCallback(() => {
-    state.setSearchHistory([]);
+  const handleClearHistory = useCallback(async () => {
+    try {
+      await searchApiService.deleteSearchHistory({ clearAll: true });
+      state.setSearchHistory([]);
+    } catch (error) {
+      console.error('Failed to clear history:', error);
+    }
   }, [state]);
   
   /**
@@ -266,7 +344,8 @@ const SearchNavigationArea: React.FC<{
   onQueryChange: (text: string) => void;
   onSearchSubmit: () => void;
   onBack: () => void;
-}> = ({ query, onQueryChange, onSearchSubmit, onBack }) => (
+  placeholder?: string;
+}> = ({ query, onQueryChange, onSearchSubmit, onBack, placeholder }) => (
   <View style={styles.navigationArea}>
     <TouchableOpacity style={styles.backButton} onPress={onBack}>
       <Text style={styles.backButtonText}>←</Text>
@@ -279,7 +358,7 @@ const SearchNavigationArea: React.FC<{
         value={query}
         onChangeText={onQueryChange}
         onSubmitEditing={onSearchSubmit}
-        placeholder="搜索用户、服务或内容"
+        placeholder={placeholder || "搜索用户、服务或内容"}
         placeholderTextColor={COLORS.TEXT_LIGHT}
         autoFocus
         returnKeyType="search"
@@ -413,6 +492,7 @@ const SearchMainPage: React.FC<SearchMainPageProps> = (props) => {
               onQueryChange={logic.handleQueryChange}
               onSearchSubmit={() => logic.executeSearch(logic.localState.query)}
               onBack={logic.handleBack}
+              placeholder={logic.placeholder}
             />
             
             {/* 空状态 - 显示历史和热门 */}

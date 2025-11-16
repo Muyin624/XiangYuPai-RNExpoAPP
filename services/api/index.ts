@@ -21,6 +21,7 @@ export { locationApi } from './locationApi';
 export { profileApi } from './profileApi';
 export { serviceApi } from './serviceApi';
 export { userApi } from './userApi';
+export * as activityApi from './activityApi';
 
 // 导出API响应和错误类型
 export { ERROR_TYPES, HTTP_STATUS } from './client';
@@ -73,6 +74,35 @@ export type {
   UserProfileVO,
   UserStatsVO
 } from './profileApi';
+
+// 导出Activity API类型
+export type {
+  ActivityListParams,
+  ActivityListResponse,
+  ActivityDetail,
+  ActivityListItem,
+  ActivityType,
+  ActivityStatus,
+  Organizer,
+  ActivityTag,
+  PriceInfo,
+  Schedule,
+  Location,
+  Participants,
+  ParticipantItem,
+  FilterConfig,
+  ActivityFilters,
+  PublishConfig,
+  PublishActivityParams,
+  PublishActivityResponse,
+  RegisterParams,
+  RegisterResponse,
+  ApproveRegistrationParams,
+  CancelRegistrationResponse,
+  ShareResponse,
+  UploadImageResponse,
+  PaymentInfo,
+} from './types/activity';
 
 // API工具函数
 export const clearAllCache = () => {

@@ -237,7 +237,8 @@ const useMainPageLogic = (props: MainPageProps) => {
    * 组局中心点击
    */
   const handleTeamPartyPress = useCallback(() => {
-    router.push('/(tabs)/homepage/event-center');
+    console.log('[MainPage] 🧭 导航: 首页 → 组局中心');
+    router.push('/activity');
   }, [router]);
   
   /**

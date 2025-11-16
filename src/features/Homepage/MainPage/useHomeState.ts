@@ -8,12 +8,16 @@
 
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-// ========== 🚫 注释掉真实API导入 ==========
-// import { homepageApiEnhanced } from '../../../../services/api/homepageApiEnhanced';
-// =========================================
 // 🆕 导入认证状态
 import { useAuthStore } from '../../../features/AuthModule';
-import type { LocationInfo, UserCard } from './types';
+import { useHomeData } from './useHomeData';
+import type { 
+  FeedItem, 
+  HomeInitResponse, 
+  ExpertsResponse,
+  LocationInfo, 
+  UserCard 
+} from './types';
 
 // Mock数据生成函数
 const generateMockUsers = (filter: string = 'nearby', region?: string): UserCard[] => {
@@ -62,6 +66,16 @@ export const useHomeState = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState<LocationInfo>({ city: '深圳' });
+  
+  // 新增状态 - 根据接口文档
+  const [homeInit, setHomeInit] = useState<HomeInitResponse | null>(null);
+  const [experts, setExperts] = useState<ExpertsResponse | null>(null);
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [feedHasMore, setFeedHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // 获取数据管理Hook
+  const homeData = useHomeData();
 
   // 加载用户数据（使用假数据）
   const loadUsers = useCallback(async () => {
@@ -114,6 +128,75 @@ export const useHomeState = () => {
       setLoading(false);
     }
   }, [activeFilter, activeRegion]);
+
+  // ========== 新增：根据接口文档的数据加载函数 ==========
+  
+  /**
+   * 加载首页初始化数据
+   */
+  const loadHomeInitData = useCallback(async () => {
+    try {
+      console.log('[useHomeState] 🔄 加载首页初始化数据');
+      const data = await homeData.loadHomeInit();
+      setHomeInit(data);
+      console.log('[useHomeState] ✅ 首页初始化数据加载完成');
+    } catch (error) {
+      console.error('[useHomeState] ❌ 加载首页初始化失败', error);
+    }
+  }, [homeData]);
+
+  /**
+   * 加载专家推荐
+   */
+  const loadExpertsData = useCallback(async () => {
+    try {
+      console.log('[useHomeState] 🔄 加载专家推荐数据');
+      const data = await homeData.loadExperts();
+      setExperts(data);
+      console.log('[useHomeState] ✅ 专家推荐数据加载完成');
+    } catch (error) {
+      console.error('[useHomeState] ❌ 加载专家推荐失败', error);
+    }
+  }, [homeData]);
+
+  /**
+   * 加载Feed流数据
+   */
+  const loadFeedData = useCallback(async (pageNum: number = 1, append: boolean = false) => {
+    try {
+      console.log('[useHomeState] 🔄 加载Feed流数据', { pageNum, append });
+      setLoading(!append); // 首次加载显示loading，追加不显示
+      
+      const data = await homeData.loadFeed(pageNum, 10);
+      
+      if (append) {
+        setFeedItems(prev => [...prev, ...data.list]);
+      } else {
+        setFeedItems(data.list);
+      }
+      
+      setFeedHasMore(data.hasMore);
+      setCurrentPage(pageNum);
+      
+      console.log('[useHomeState] ✅ Feed流数据加载完成', { 
+        count: data.list.length, 
+        hasMore: data.hasMore 
+      });
+    } catch (error) {
+      console.error('[useHomeState] ❌ 加载Feed流失败', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [homeData]);
+
+  /**
+   * 上拉加载更多Feed
+   */
+  const loadMoreFeed = useCallback(() => {
+    if (!loading && feedHasMore) {
+      loadFeedData(currentPage + 1, true);
+    }
+  }, [loading, feedHasMore, currentPage, loadFeedData]);
 
   // 加载限时专享数据（使用假数据）
   const loadLimitedOffers = useCallback(async () => {
@@ -187,7 +270,7 @@ export const useHomeState = () => {
     [loadUsers, activeFilter, activeRegion]
   );
 
-  // 刷新处理 - 🆕 添加登录检查
+  // 刷新处理 - 🆕 添加登录检查，使用新API
   const handleRefresh = useCallback(() => {
     console.log('[useHomeState] 🔄 用户触发下拉刷新');
     
@@ -208,7 +291,14 @@ export const useHomeState = () => {
     console.log('[useHomeState] ✅ 用户已登录，执行刷新');
     setRefreshing(true);
     
-    Promise.all([loadUsers(), loadLimitedOffers()])
+    // 使用新API并发刷新所有数据
+    Promise.all([
+      loadHomeInitData(),
+      loadExpertsData(),
+      loadFeedData(1, false), // 重置到第一页
+      loadUsers(), // 保留旧数据加载（向后兼容）
+      loadLimitedOffers(), // 保留旧数据加载（向后兼容）
+    ])
       .then(() => {
         console.log('[useHomeState] ✅ 刷新完成');
       })
@@ -218,9 +308,18 @@ export const useHomeState = () => {
       .finally(() => {
         setRefreshing(false);
       });
-  }, [isAuthenticated, router, loadUsers, loadLimitedOffers]);
+  }, [
+    isAuthenticated, 
+    router, 
+    loadHomeInitData,
+    loadExpertsData,
+    loadFeedData,
+    loadUsers, 
+    loadLimitedOffers
+  ]);
 
-  // 初始化数据加载
+  // 初始化数据加载 - 使用新API
+  // 只在组件挂载时执行一次
   useEffect(() => {
     console.log('[useHomeState] 🚀 开始初始化加载', {
       activeFilter,
@@ -228,31 +327,55 @@ export const useHomeState = () => {
       location: location.city,
     });
     
-    // 并行加载数据
+    // 并行加载所有数据（新API + 旧API）
     Promise.all([
-      loadUsers(),
-      loadLimitedOffers(),
+      loadHomeInitData(),      // 新：首页初始化
+      loadExpertsData(),       // 新：专家推荐
+      loadFeedData(1, false),  // 新：Feed流
+      loadUsers(),             // 旧：用户列表（兼容）
+      loadLimitedOffers(),     // 旧：限时专享（兼容）
     ]).then(() => {
       console.log('[useHomeState] ✅ 初始化加载完成');
     }).catch(error => {
       console.error('[useHomeState] ❌ 初始化加载失败', error);
     });
-  }, [loadUsers, loadLimitedOffers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 空依赖数组，只在组件挂载时执行一次
 
   return {
+    // 搜索和筛选状态
     searchQuery,
     setSearchQuery,
     activeFilter,
     setActiveFilter,
     activeRegion,
     setActiveRegion,
+    
+    // 旧数据状态（向后兼容）
     users,
     limitedOffers,
+    
+    // 新数据状态（根据接口文档）
+    homeInit,
+    experts,
+    feedItems,
+    feedHasMore,
+    currentPage,
+    
+    // 通用状态
     loading,
     refreshing,
     location,
     setLocation,
+    
+    // 操作函数
     handleSearch,
     handleRefresh,
+    
+    // 新数据加载函数
+    loadHomeInitData,
+    loadExpertsData,
+    loadFeedData,
+    loadMoreFeed,
   };
 };

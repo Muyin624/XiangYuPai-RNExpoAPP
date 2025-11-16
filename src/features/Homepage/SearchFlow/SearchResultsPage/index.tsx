@@ -17,11 +17,12 @@
 
 // #region 2. Imports
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     FlatList,
     Image,
+    RefreshControl,
     SafeAreaView,
     StatusBar,
     StyleSheet,
@@ -29,6 +30,10 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+
+// API服务
+import { searchApiService } from '../api';
+import type { OrderResult, TopicResult, UserResult } from '../api';
 // #endregion
 
 // #region 3. Types & Schema
@@ -41,32 +46,11 @@ export interface SearchResultsPageProps {
 
 type TabType = 'all' | 'users' | 'orders' | 'topics';
 
-interface UserResult {
-  id: string;
-  avatar: string;
-  nickname: string;
-  tags: string[];
-  isOnline?: boolean;
-  isVerified?: boolean;
-}
-
-interface OrderResult {
-  id: string;
-  avatar: string;
-  nickname: string;
-  tags: string[];
-  title: string;
-  description: string;
-  price: string;
-  distance: string;
-}
-
-interface TopicResult {
-  id: string;
-  icon: string;
-  title: string;
-  subtitle: string;
-  tag?: string;
+interface SearchState {
+  loading: boolean;
+  refreshing: boolean;
+  hasMore: boolean;
+  pageNum: number;
 }
 // #endregion
 
@@ -105,91 +89,131 @@ const TABS = [
 ];
 // #endregion
 
-// #region 5. Mock Data
-const generateMockUserResults = (query: string): UserResult[] => {
-  return [
-    {
-      id: '1',
-      avatar: 'https://via.placeholder.com/60',
-      nickname: `王者荣耀112`,
-      tags: ['王者荣耀'],
-      isVerified: true,
-    },
-    {
-      id: '2',
-      avatar: 'https://via.placeholder.com/60',
-      nickname: `王者荣耀348`,
-      tags: ['王者荣耀'],
-      isVerified: true,
-    },
-    {
-      id: '3',
-      avatar: 'https://via.placeholder.com/60',
-      nickname: `王者荣耀大师`,
-      tags: ['王者荣耀'],
-      isOnline: true,
-    },
-  ];
-};
-
-const generateMockOrderResults = (query: string): OrderResult[] => {
-  return [
-    {
-      id: '1',
-      avatar: 'https://via.placeholder.com/80',
-      nickname: '昵称123',
-      tags: ['女'],
-      title: '王者荣耀陪玩',
-      description: '王打野位出租 擅长韩信、兰陵王力量感慨 能C能躺 随叫随到',
-      price: '10 金币/局',
-      distance: '3.3km',
-    },
-    {
-      id: '2',
-      avatar: 'https://via.placeholder.com/80',
-      nickname: '昵称123',
-      tags: ['女'],
-      title: '王者荣耀陪玩',
-      description: '王打野位出租 擅长韩信、兰陵王力量感慨 能C能躺 随叫随到',
-      price: '10 金币/局',
-      distance: '3.3km',
-    },
-    {
-      id: '3',
-      avatar: 'https://via.placeholder.com/80',
-      nickname: '昵称123',
-      tags: ['女'],
-      title: '王者荣耀陪玩',
-      description: '王打野位出租 擅长韩信、兰陵王力量感慨 能C能躺 随叫随到',
-      price: '10 金币/局',
-      distance: '1.2km',
-    },
-  ];
-};
-
-const generateMockTopicResults = (query: string): TopicResult[] => {
-  return [
-    {
-      id: '1',
-      icon: 'https://via.placeholder.com/50',
-      title: '王者荣耀',
-      subtitle: '这是有关王者荣耀的话题',
-      tag: 'HOT',
-    },
-    {
-      id: '2',
-      icon: 'https://via.placeholder.com/50',
-      title: '王者荣耀陪位',
-      subtitle: '这是有关王者荣耀陪位的话题',
-      tag: 'HOT',
-    },
-    {
-      id: '3',
-      icon: 'https://via.placeholder.com/50',
-      title: '王者荣耀交友',
-      subtitle: '这是有关王者荣耀交友的话题',
-    },
-  ];
+// #region 5. Data Fetching Hooks
+/**
+ * 搜索结果数据管理Hook
+ */
+const useSearchResults = (query: string, activeTab: TabType) => {
+  const [users, setUsers] = useState<UserResult[]>([]);
+  const [orders, setOrders] = useState<OrderResult[]>([]);
+  const [topics, setTopics] = useState<TopicResult[]>([]);
+  const [allResults, setAllResults] = useState<any[]>([]);
+  
+  const [state, setState] = useState<SearchState>({
+    loading: false,
+    refreshing: false,
+    hasMore: true,
+    pageNum: 1,
+  });
+  
+  const pageSize = 10;
+  
+  // 加载数据
+  const loadData = useCallback(async (refresh: boolean = false) => {
+    if (state.loading) return;
+    
+    const currentPage = refresh ? 1 : state.pageNum;
+    setState(prev => ({ ...prev, loading: true, refreshing: refresh }));
+    
+    try {
+      switch (activeTab) {
+        case 'users':
+          const userData = await searchApiService.getSearchUsers({
+            keyword: query,
+            pageNum: currentPage,
+            pageSize,
+          });
+          setUsers(refresh ? userData.list : [...users, ...userData.list]);
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            refreshing: false,
+            hasMore: userData.hasMore,
+            pageNum: currentPage + 1,
+          }));
+          break;
+          
+        case 'orders':
+          const orderData = await searchApiService.getSearchOrders({
+            keyword: query,
+            pageNum: currentPage,
+            pageSize,
+          });
+          setOrders(refresh ? orderData.list : [...orders, ...orderData.list]);
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            refreshing: false,
+            hasMore: orderData.hasMore,
+            pageNum: currentPage + 1,
+          }));
+          break;
+          
+        case 'topics':
+          const topicData = await searchApiService.getSearchTopics({
+            keyword: query,
+            pageNum: currentPage,
+            pageSize,
+          });
+          setTopics(refresh ? topicData.list : [...topics, ...topicData.list]);
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            refreshing: false,
+            hasMore: topicData.hasMore,
+            pageNum: currentPage + 1,
+          }));
+          break;
+          
+        case 'all':
+        default:
+          const allData = await searchApiService.getSearchAll({
+            keyword: query,
+            pageNum: currentPage,
+            pageSize,
+          });
+          setAllResults(refresh ? allData.list : [...allResults, ...allData.list]);
+          setState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            refreshing: false,
+            hasMore: allData.hasMore,
+            pageNum: currentPage + 1,
+          }));
+          break;
+      }
+    } catch (error) {
+      console.error('Failed to load search results:', error);
+      setState(prev => ({ ...prev, loading: false, refreshing: false }));
+    }
+  }, [query, activeTab, state.pageNum, state.loading]);
+  
+  // Tab切换时重置并加载
+  useEffect(() => {
+    setState({ loading: false, refreshing: false, hasMore: true, pageNum: 1 });
+    setUsers([]);
+    setOrders([]);
+    setTopics([]);
+    setAllResults([]);
+    loadData(true);
+  }, [activeTab, query]);
+  
+  const handleRefresh = () => loadData(true);
+  const handleLoadMore = () => {
+    if (state.hasMore && !state.loading) {
+      loadData(false);
+    }
+  };
+  
+  return {
+    users,
+    orders,
+    topics,
+    allResults,
+    state,
+    handleRefresh,
+    handleLoadMore,
+  };
 };
 // #endregion
 
@@ -219,9 +243,16 @@ const TabBar: React.FC<{
 /**
  * 用户结果卡片 - 带动画
  */
-const UserResultCard: React.FC<{ user: UserResult; onPress: () => void }> = ({
+const UserResultCard: React.FC<{ 
+  user: UserResult; 
+  onPress: () => void;
+  onFollow?: () => void;
+  isFollowing?: boolean;
+}> = ({
   user,
   onPress,
+  onFollow,
+  isFollowing,
 }) => {
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   
@@ -242,29 +273,43 @@ const UserResultCard: React.FC<{ user: UserResult; onPress: () => void }> = ({
           <View style={styles.userInfo}>
             <View style={styles.userNameRow}>
               <Text style={styles.userName}>{user.nickname}</Text>
+              {user.age && <Text style={styles.userAge}> {user.age}岁</Text>}
               {user.isVerified && (
                 <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedText}>✓ 已认证</Text>
+                  <Text style={styles.verifiedText}>✓ {user.verifiedLabel || '已认证'}</Text>
                 </View>
               )}
             </View>
+            {user.signature && (
+              <Text style={styles.userSignature} numberOfLines={1}>{user.signature}</Text>
+            )}
             <View style={styles.userTags}>
-              {user.tags.map((tag, index) => (
+              {user.tags && user.tags.map((tag, index) => (
                 <View key={index} style={styles.userTag}>
                   <Text style={styles.userTagText}>{tag}</Text>
                 </View>
               ))}
             </View>
           </View>
-          {user.isOnline && (
-            <View style={styles.onlineIndicator}>
-              <View style={styles.onlineDot} />
-            </View>
-          )}
         </View>
-        <TouchableOpacity style={styles.followButton} activeOpacity={0.8}>
-          <Text style={styles.followButtonText}>+ 关注</Text>
-        </TouchableOpacity>
+        {onFollow && (
+          <TouchableOpacity 
+            style={[
+              styles.followButton,
+              (user.relationStatus === 'following' || user.relationStatus === 'mutual' || isFollowing) && styles.followingButton
+            ]} 
+            onPress={onFollow}
+            activeOpacity={0.8}
+          >
+            <Text style={[
+              styles.followButtonText,
+              (user.relationStatus === 'following' || user.relationStatus === 'mutual' || isFollowing) && styles.followingButtonText
+            ]}>
+              {user.relationStatus === 'mutual' ? '互相关注' : 
+               user.relationStatus === 'following' || isFollowing ? '已关注' : '+ 关注'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -297,19 +342,23 @@ const OrderResultCard: React.FC<{ order: OrderResult; onPress: () => void }> = (
             <View style={styles.orderUserInfo}>
               <Text style={styles.orderNickname}>{order.nickname}</Text>
               {order.tags.map((tag, index) => (
-                <View key={index} style={styles.orderTag}>
-                  <Text style={styles.orderTagText}>{tag}</Text>
+                <View key={index} style={[styles.orderTag, { backgroundColor: COLORS.SECONDARY }]}>
+                  <Text style={styles.orderTagText}>{tag.text}</Text>
                 </View>
               ))}
             </View>
-            <Text style={styles.orderDistance}>📍 {order.distance}</Text>
+            <Text style={styles.orderDistance}>📍 {order.distance}km</Text>
           </View>
-          <Text style={styles.orderTitle}>{order.title}</Text>
           <Text style={styles.orderDescription} numberOfLines={2}>
             {order.description}
           </Text>
           <View style={styles.orderFooter}>
-            <Text style={styles.orderPrice}>💰 {order.price}</Text>
+            <Text style={styles.orderPrice}>💰 {order.price.displayText}</Text>
+            {order.isOnline && (
+              <View style={styles.onlineBadge}>
+                <Text style={styles.onlineText}>在线</Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -341,55 +390,21 @@ const TopicResultCard: React.FC<{ topic: TopicResult; onPress: () => void }> = (
         <Image source={{ uri: topic.icon }} style={styles.topicIcon} />
         <View style={styles.topicContent}>
           <View style={styles.topicHeader}>
-            <Text style={styles.topicTitle}>#{topic.title}</Text>
-            {topic.tag && (
+            <Text style={styles.topicTitle}>#{topic.topicName}</Text>
+            {topic.isHot && (
               <View style={styles.topicTagBadge}>
-                <Text style={styles.topicTagText}>🔥 {topic.tag}</Text>
+                <Text style={styles.topicTagText}>🔥 {topic.hotLabel || '热门'}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.topicSubtitle}>{topic.subtitle}</Text>
+          <Text style={styles.topicSubtitle}>{topic.description}</Text>
+          <Text style={styles.topicStats}>📝 {topic.stats.posts} 帖子</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-/**
- * 全部结果混合列表
- */
-const AllResultsList: React.FC<{
-  users: UserResult[];
-  orders: OrderResult[];
-  topics: TopicResult[];
-  onUserPress: (id: string) => void;
-  onOrderPress: (id: string) => void;
-  onTopicPress: (id: string) => void;
-}> = ({ users, orders, topics, onUserPress, onOrderPress, onTopicPress }) => {
-  // 混合所有结果
-  const allResults = [
-    ...users.slice(0, 2).map(u => ({ type: 'user' as const, data: u })),
-    ...orders.slice(0, 2).map(o => ({ type: 'order' as const, data: o })),
-    ...topics.slice(0, 2).map(t => ({ type: 'topic' as const, data: t })),
-  ];
-
-  return (
-    <FlatList
-      data={allResults}
-      renderItem={({ item }) => {
-        if (item.type === 'user') {
-          return <UserResultCard user={item.data} onPress={() => onUserPress(item.data.id)} />;
-        } else if (item.type === 'order') {
-          return <OrderResultCard order={item.data} onPress={() => onOrderPress(item.data.id)} />;
-        } else {
-          return <TopicResultCard topic={item.data} onPress={() => onTopicPress(item.data.id)} />;
-        }
-      }}
-      keyExtractor={(item, index) => `${item.type}-${index}`}
-      contentContainerStyle={styles.listContent}
-    />
-  );
-};
 // #endregion
 
 // #region 7. Main Component
@@ -401,24 +416,49 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
 }) => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('all');
+  
+  // 使用搜索结果Hook
+  const searchResults = useSearchResults(query, activeTab);
+  const { users, orders, topics, allResults, state, handleRefresh, handleLoadMore } = searchResults;
+  
+  // 关注/取消关注用户
+  const [followingUsers, setFollowingUsers] = useState<Set<number>>(new Set());
+  
+  const handleFollow = useCallback(async (userId: number, currentStatus: string) => {
+    try {
+      const action = currentStatus === 'none' || currentStatus === 'followed' ? 'follow' : 'unfollow';
+      const result = await searchApiService.followUser({
+        targetUserId: userId,
+        action,
+      });
+      
+      // 更新本地状态
+      setFollowingUsers(prev => {
+        const newSet = new Set(prev);
+        if (result.relationStatus === 'following' || result.relationStatus === 'mutual') {
+          newSet.add(userId);
+        } else {
+          newSet.delete(userId);
+        }
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Failed to follow/unfollow user:', error);
+    }
+  }, []);
 
-  // 生成模拟数据
-  const users = generateMockUserResults(query);
-  const orders = generateMockOrderResults(query);
-  const topics = generateMockTopicResults(query);
-
-  const handleUserPress = (id: string) => {
+  const handleUserPress = (id: number) => {
     // 跳转到他人详情页
-    router.push({ pathname: '/profile/[userId]' as any, params: { userId: id } });
+    router.push({ pathname: '/profile/[userId]' as any, params: { userId: id.toString() } });
   };
 
-  const handleOrderPress = (id: string) => {
+  const handleOrderPress = (id: number) => {
     // 跳转到技能详情页（服务详情）
-    router.push({ pathname: '/skill/[skillId]' as any, params: { skillId: id } });
+    router.push({ pathname: '/skill/[skillId]' as any, params: { skillId: id.toString() } });
   };
 
-  const handleTopicPress = (id: string) => {
-    router.push({ pathname: '/topic/[topicId]' as any, params: { topicId: id } });
+  const handleTopicPress = (id: number) => {
+    router.push({ pathname: '/topic/[topicId]' as any, params: { topicId: id.toString() } });
   };
 
   const renderContent = () => {
@@ -428,10 +468,20 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
           <FlatList
             data={users}
             renderItem={({ item }) => (
-              <UserResultCard user={item} onPress={() => handleUserPress(item.id)} />
+              <UserResultCard 
+                user={item} 
+                onPress={() => handleUserPress(item.userId)}
+                onFollow={() => handleFollow(item.userId, item.relationStatus)}
+                isFollowing={followingUsers.has(item.userId)}
+              />
             )}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.userId.toString()}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={state.refreshing} onRefresh={handleRefresh} />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
           />
         );
       case 'orders':
@@ -439,10 +489,15 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
           <FlatList
             data={orders}
             renderItem={({ item }) => (
-              <OrderResultCard order={item} onPress={() => handleOrderPress(item.id)} />
+              <OrderResultCard order={item} onPress={() => handleOrderPress(item.userId)} />
             )}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.userId.toString()}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={state.refreshing} onRefresh={handleRefresh} />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
           />
         );
       case 'topics':
@@ -450,22 +505,45 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
           <FlatList
             data={topics}
             renderItem={({ item }) => (
-              <TopicResultCard topic={item} onPress={() => handleTopicPress(item.id)} />
+              <TopicResultCard topic={item} onPress={() => handleTopicPress(item.topicId)} />
             )}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.topicId.toString()}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={state.refreshing} onRefresh={handleRefresh} />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
           />
         );
       case 'all':
       default:
         return (
-          <AllResultsList
-            users={users}
-            orders={orders}
-            topics={topics}
-            onUserPress={handleUserPress}
-            onOrderPress={handleOrderPress}
-            onTopicPress={handleTopicPress}
+          <FlatList
+            data={allResults}
+            renderItem={({ item }) => {
+              if (item.itemType === 'user' && item.user) {
+                return <UserResultCard 
+                  user={item.user} 
+                  onPress={() => handleUserPress(item.user.userId)}
+                  onFollow={() => handleFollow(item.user.userId, item.user.relationStatus || 'none')}
+                  isFollowing={followingUsers.has(item.user.userId)}
+                />;
+              } else if ((item.itemType === 'post' || item.itemType === 'video') && item.post) {
+                // 这里可以显示帖子/视频卡片
+                return <View style={styles.userCard}>
+                  <Text>{item.post.description}</Text>
+                </View>;
+              }
+              return null;
+            }}
+            keyExtractor={(item, index) => `${item.itemType}-${item.itemId}-${index}`}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={state.refreshing} onRefresh={handleRefresh} />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
           />
         );
     }
@@ -628,6 +706,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: COLORS.BORDER,
+    flexDirection: 'column',
   },
   userCardContent: {
     flexDirection: 'row',
@@ -654,7 +733,17 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: COLORS.TEXT,
-    marginRight: 8,
+  },
+  userAge: {
+    fontSize: 14,
+    color: COLORS.TEXT_SECONDARY,
+    marginLeft: 4,
+  },
+  userSignature: {
+    fontSize: 13,
+    color: COLORS.TEXT_SECONDARY,
+    marginTop: 4,
+    marginBottom: 8,
   },
   verifiedBadge: {
     backgroundColor: COLORS.VERIFIED_BG,
@@ -709,11 +798,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 2,
+    marginTop: 8,
+  },
+  followingButton: {
+    backgroundColor: COLORS.WHITE,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
   },
   followButtonText: {
     fontSize: 13,
     color: COLORS.WHITE,
     fontWeight: '700',
+  },
+  followingButtonText: {
+    color: COLORS.TEXT_SECONDARY,
   },
 
   // Order Card
@@ -804,6 +902,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  onlineBadge: {
+    backgroundColor: COLORS.ONLINE,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  onlineText: {
+    fontSize: 12,
+    color: COLORS.WHITE,
+    fontWeight: '600',
+  },
 
   // Topic Card
   topicCard: {
@@ -858,6 +967,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.TEXT_SECONDARY,
     lineHeight: 18,
+    marginBottom: 6,
+  },
+  topicStats: {
+    fontSize: 12,
+    color: COLORS.TEXT_LIGHT,
   },
 });
 
